@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
-import { UserProfileCard } from '@/app/(main)/home/_components/user-profile-card';
+import { UserProfileCard } from '@/app/(main)/home/_components/profile/user-profile-card';
 import { redirect } from 'next/navigation';
 import { Headers } from '@/components/common/headers';
-import TodayCommitCard from './_components/today-commit-card';
+import TodayCommitCard from './_components/profile/today-commit-card';
 import GroupListSection from './_components/group/group-list';
+import { StreakBadge } from './_components/profile/streak_badge';
 
 interface HomePageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -26,7 +27,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // 기본 홈 화면 - 내 프로필
   const MyProfileSection = () => (
     <main className="max-w-4xl mx-auto">
-      <UserProfileCard user={user} />
+      <UserProfileCard user={user} isCommitted={false} count={5} />
+      <StreakBadge count={5} />
       <TodayCommitCard />
     </main>
   );
