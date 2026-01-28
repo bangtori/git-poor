@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { UserProfileCard } from '@/app/dashboard/_components/user-profile-card';
+import { UserProfileCard } from '@/app/home/_components/user-profile-card';
 import { redirect } from 'next/navigation';
 import { Headers } from '@/components/common/headers';
 import TodayCommitCard from './_components/today-commit-card';

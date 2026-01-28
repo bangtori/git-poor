@@ -21,5 +21,5 @@ export async function GET(request: Request) {
     console.log('3. 세션 교환 성공!');
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`);
+  return NextResponse.redirect(`${origin}/home`);
 }
