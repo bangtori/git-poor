@@ -1,25 +1,30 @@
-import type { PropsWithChildren } from 'react';
+import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
+import { cn } from '@/lib/utils'; // cn 함수가 있다면 사용 권장
 
-interface ButtonProps {
-  disable?: boolean;
-  className?: string;
-  onClick?: () => void;
-}
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {}
 
 const FilledButton = ({
   children,
-  disable = false,
+  disabled = false,
   onClick,
   className = '',
+  ...props
 }: PropsWithChildren<ButtonProps>) => {
-  const backgroundClass = disable
+  const backgroundClass = disabled
     ? 'bg-primary-dim cursor-not-allowed'
-    : 'bg-primary hover:bg-primary-hover cursor-pointer';
-
-  const classes = `w-full mt-6 py-3 font-bold text-text-primary transition-colors duration-200 rounded-xl ${backgroundClass} ${className}`;
+    : 'bg-primary hover:bg-primary-hover cursor-pointer active:scale-[0.98]';
 
   return (
-    <button className={classes} disabled={disable} onClick={onClick}>
+    <button
+      {...props}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'w-full py-3 font-bold text-text-primary transition-all duration-200 rounded-xl',
+        backgroundClass,
+        className,
+      )}
+    >
       {children}
     </button>
   );

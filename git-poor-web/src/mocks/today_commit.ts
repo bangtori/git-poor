@@ -18,6 +18,7 @@ export const MOCK_TODAY_SUMMARY_MANY_LANGS: TodayCommitSummary = {
   is_success: true,
 };
 
+// 오늘 커밋 아직 진행 안했을 시
 export const MOCK_TODAY_SUMMARY_NO_COMMIT: TodayCommitSummary = {
   date: '2026-01-29',
   total_changes: 0,

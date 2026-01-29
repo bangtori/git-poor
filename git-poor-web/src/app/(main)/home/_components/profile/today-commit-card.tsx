@@ -1,18 +1,25 @@
+// src/app/(main)/home/_components/profile/today-commit-card.tsx
 'use client';
 
 import DefaultCard from '@/components/ui/default-card';
 import FilledButton from '@/components/ui/filled-button';
 import { TodayCommitSummary } from '@/types';
 import { cn } from '@/lib/utils';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
 interface TodayCommitCardProps {
   currentFine: number;
   commit: TodayCommitSummary;
+  isLoading: boolean;
   onRefresh?: () => void;
 }
 
 const TodayCommitCard = ({
   currentFine = 1000,
   commit,
+  isLoading,
   onRefresh,
 }: TodayCommitCardProps) => {
   return (
@@ -55,8 +62,18 @@ const TodayCommitCard = ({
       </div>
 
       <div className="mt-4">
-        <FilledButton onClick={onRefresh} className="w-full">
-          커밋 확인하기 (새로고침)
+        <FilledButton
+          onClick={onRefresh}
+          disabled={isLoading} // 로딩 중 버튼 비활성화
+          className="w-full"
+        >
+          {isLoading ? (
+            <span>
+              <span className="animate-spin text-lg">⏳</span> 동기화 중...
+            </span>
+          ) : (
+            '커밋 확인하기 (새로고침)'
+          )}
         </FilledButton>
       </div>
     </DefaultCard>
