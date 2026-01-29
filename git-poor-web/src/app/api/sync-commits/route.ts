@@ -122,7 +122,7 @@ export async function POST() {
 
     const resultData = {
       date: todayTarget,
-      push_count: processedShas.size, // 실제 유효한 커밋 수
+      commit_count: processedShas.size, // 실제 유효한 커밋 수
       total_changes: totalAdditions + totalDeletions,
       languages: Array.from(languageSet),
       is_success: processedShas.size > 0, // 유효 커밋이 1개라도 있어야 성공

@@ -4,7 +4,7 @@ import { TodayCommitSummary } from '@/types';
 export const MOCK_TODAY_SUMMARY: TodayCommitSummary = {
   date: '2026-01-29',
   total_changes: 245, // 여러 커밋의 합계
-  push_count: 5,
+  commit_count: 5,
   languages: ['TypeScript', 'Swift'],
   is_success: true,
 };
@@ -13,7 +13,7 @@ export const MOCK_TODAY_SUMMARY: TodayCommitSummary = {
 export const MOCK_TODAY_SUMMARY_MANY_LANGS: TodayCommitSummary = {
   date: '2026-01-29',
   total_changes: 3000,
-  push_count: 10,
+  commit_count: 10,
   languages: ['Swift', 'TypeScript', 'Rust', 'Go', 'Python', 'HTML'],
   is_success: true,
 };
@@ -22,7 +22,7 @@ export const MOCK_TODAY_SUMMARY_MANY_LANGS: TodayCommitSummary = {
 export const MOCK_TODAY_SUMMARY_NO_COMMIT: TodayCommitSummary = {
   date: '2026-01-29',
   total_changes: 0,
-  push_count: 5,
+  commit_count: 5,
   languages: [],
   is_success: false,
 };

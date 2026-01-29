@@ -37,7 +37,7 @@ const TodayCommitCard = ({
             </p>
             <div className="text-center">
               <p className="text-text-primary text-sm mt-1">
-                총 Push 횟수: {commit.push_count} 개
+                반영된 Commit 수: {commit.commit_count} 개
               </p>
               <p className="text-text-primary text-sm mt-1">
                 총 변경 Line 수: {commit.total_changes} line
