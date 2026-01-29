@@ -5,6 +5,11 @@ import { Headers } from '@/components/common/headers';
 import TodayCommitCard from './_components/profile/today-commit-card';
 import GroupListSection from './_components/group/group-list';
 import { StreakBadge } from './_components/profile/streak_badge';
+import {
+  MOCK_TODAY_SUMMARY_NO_COMMIT,
+  MOCK_TODAY_SUMMARY,
+  MOCK_TODAY_SUMMARY_MANY_LANGS,
+} from '@/mocks/today_commit';
 
 interface HomePageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -29,7 +34,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <main className="max-w-4xl mx-auto">
       <UserProfileCard user={user} isCommitted={false} count={5} />
       <StreakBadge count={5} />
-      <TodayCommitCard />
+      <TodayCommitCard commit={MOCK_TODAY_SUMMARY_NO_COMMIT} currentFine={0} />
+
+      <TodayCommitCard commit={MOCK_TODAY_SUMMARY} currentFine={0} />
+
+      <TodayCommitCard commit={MOCK_TODAY_SUMMARY_MANY_LANGS} currentFine={0} />
     </main>
   );
 
