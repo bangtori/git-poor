@@ -20,6 +20,7 @@ export default function MyProfileSection({
   const [commitSummary, setCommitSummary] =
     useState<TodayCommitSummary>(initialCommit);
   const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const syncToken = async () => {
       const supabase = await createClient();
@@ -63,7 +64,7 @@ export default function MyProfileSection({
   const handleSync = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/sync-commits', { method: 'POST' });
+      const response = await fetch('/api/commits/sync', { method: 'POST' });
       const data = await response.json();
 
       if (data.success) {
