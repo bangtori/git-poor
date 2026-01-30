@@ -1,4 +1,5 @@
-import { MobileBottomNav } from '@/components/common/moblie-bottom-nav'; // 경로 확인해주세요!
+import { Suspense } from 'react'; // 1. Suspense 임포트
+import { MobileBottomNav } from '@/components/common/moblie-bottom-nav';
 
 export default function MainLayout({
   children,
@@ -13,7 +14,10 @@ export default function MainLayout({
       </main>
 
       {/* 모바일 하단 탭바 */}
-      <MobileBottomNav />
+      {/* 2. useSearchParams를 사용하는 컴포넌트를 Suspense로 감쌉니다. */}
+      <Suspense fallback={<div className="h-16 bg-gray-900" />}>
+        <MobileBottomNav />
+      </Suspense>
     </div>
   );
 }
