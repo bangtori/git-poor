@@ -1,7 +1,7 @@
 import DefaultCard from '@/components/ui/default-card';
 import type { User } from '@supabase/supabase-js';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/tailwind-utils';
 import { Flame } from 'lucide-react';
 
 interface UserProfileCardProps {

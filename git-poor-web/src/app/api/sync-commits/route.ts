@@ -2,42 +2,8 @@
 import { NextResponse } from 'next/server';
 import { Octokit } from 'octokit';
 import { createClient } from '@/lib/supabase/server';
-
-// UTC + 4시간 = GitPoor 기준 날짜
-const getGitPoorDate = (isoString: string) => {
-  const date = new Date(isoString);
-  date.setHours(date.getHours() + 4);
-  return date.toISOString().split('T')[0];
-};
-
-// 파일명에서 확장자 추출
-const getExtension = (filename: string) => {
-  return filename.split('.').pop()?.toLowerCase() || '';
-};
-
-// 확장자에서 언어 추론
-const inferLanguage = (filename: string) => {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  const map: Record<string, string> = {
-    ts: 'TypeScript',
-    tsx: 'TypeScript',
-    js: 'JavaScript',
-    jsx: 'JavaScript',
-    swift: 'Swift',
-    py: 'Python',
-    java: 'Java',
-    kt: 'Kotlin',
-    go: 'Go',
-    c: 'C',
-    cpp: 'C++',
-    css: 'CSS',
-    html: 'HTML',
-    vue: 'Vue',
-    svelte: 'Svelte',
-  };
-  return map[ext || ''] || 'Other';
-};
-
+import { getGitPoorDate } from '@/lib/utils/date-utils';
+import { getExtension, inferLanguage } from '@/lib/utils/git-info-utils';
 // ---------------------------------------------------------
 // 메인 로직 (POST)
 // ---------------------------------------------------------

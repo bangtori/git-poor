@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
-import { cn } from '@/lib/utils'; // cn 함수가 있다면 사용 권장
+import { cn } from '@/lib/utils/tailwind-utils'; // cn 함수가 있다면 사용 권장
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {}
 
