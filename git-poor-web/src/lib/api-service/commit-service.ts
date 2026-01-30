@@ -1,4 +1,4 @@
-// src/lib/commit-service.ts
+// src/lib/api-service/commit-service.ts
 import { SupabaseClient } from '@supabase/supabase-js';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { TodayCommitSummary } from '@/types';
@@ -9,12 +9,27 @@ export async function getTodayCommitData(
 ): Promise<TodayCommitSummary> {
   const todayDate = getGitPoorDate(new Date().toISOString());
 
-  // DB 조회
-  const { data: commits } = await supabase
-    .from('commits') // 테이블명 확인
-    .select('*')
-    .eq('user_id', userId)
-    .eq('commit_date', todayDate);
+  // DB 조회 (커밋 데이터와 유저 스트릭 정보를 병렬로 조회)
+  const [commitRes, userRes] = await Promise.all([
+    supabase
+      .from('commits') // 테이블명 확인
+      .select('*')
+      .eq('user_id', userId)
+      .eq('commit_date', todayDate),
+    supabase
+      .from('users')
+      .select('current_streak, longest_streak')
+      .eq('id', userId)
+      .single(),
+  ]);
+
+  const commits = commitRes.data;
+
+  // 스트릭 데이터 가공
+  const streakData = {
+    current_streak: userRes.data?.current_streak || 0,
+    longest_streak: userRes.data?.longest_streak || 0,
+  };
 
   // 데이터가 없으면 기본값(0) 리턴
   if (!commits || commits.length === 0) {
@@ -24,6 +39,7 @@ export async function getTodayCommitData(
       total_changes: 0,
       languages: [],
       is_success: false,
+      streak: streakData,
     };
   }
 
@@ -44,5 +60,6 @@ export async function getTodayCommitData(
     total_changes: totalChanges,
     languages: languages,
     is_success: true,
+    streak: streakData,
   };
 }

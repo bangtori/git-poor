@@ -1,3 +1,5 @@
+import { Streak } from './streak';
+
 /**
  * GitPoor 커밋 데이터 정보
  */
@@ -56,4 +58,5 @@ export interface TodayCommitSummary {
   commit_count: number; // 오늘 총 커밋수 -> 조직 커밋의 경우 노이즈 생길 수 있음
   languages: string[]; // 오늘 사용된 언어들 (중복 제거된 Set 결과물)
   is_success: boolean; // 커밋 여부 (total_changes > 0)
+  streak: Streak;
 }

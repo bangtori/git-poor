@@ -1,11 +1,14 @@
-// src/app/api/sync-commits/route.ts
 import { NextResponse } from 'next/server';
 import { Octokit } from 'octokit';
 import { createClient } from '@/lib/supabase/server';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { getExtension, inferLanguage } from '@/lib/utils/git-info-utils';
-import { updateStreakIncremental } from '@/lib/api-service/streak-service';
+import {
+  updateStreakIncremental,
+  getStreakData,
+} from '@/lib/api-service/streak-service';
 import { createAdminClient } from '@/lib/supabase/admin';
+
 // ---------------------------------------------------------
 // 메인 로직 (POST)
 // ---------------------------------------------------------
@@ -13,7 +16,7 @@ export async function POST() {
   try {
     // supabase & User 초기화
     const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    const adminSupabase = createAdminClient(); // 스트릭 업데이트용 어드민 클라이언트
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -45,9 +48,7 @@ export async function POST() {
 
     // 날짜 설정
     const now = new Date();
-    const todayTarget = new Date(now.getTime() + 4 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0];
+    const todayTarget = getGitPoorDate(now.toISOString()); // 기존 유틸 함수 사용
 
     console.log(`[서버] 사용자: ${targetUsername}, 타겟 날짜: ${todayTarget}`);
 
@@ -65,8 +66,14 @@ export async function POST() {
         getGitPoorDate(event.created_at!) === todayTarget,
     );
 
+    // 스트릭 데이터를 담을 변수
+    let streakInfo = { current_streak: 0, longest_streak: 0 };
+
     // 커밋이 없으면 null 대신 비워진 데이터 반환
     if (todayPushEvents.length === 0) {
+      // 커밋이 없어도 현재 스트릭 정보는 가져와서 반환함
+      const currentStreak = await getStreakData(adminSupabase, user.id);
+
       return NextResponse.json({
         success: true,
         message: '오늘의 커밋이 없습니다.',
@@ -76,6 +83,7 @@ export async function POST() {
           total_changes: 0,
           languages: [],
           is_success: false,
+          streak: currentStreak, // 스트릭 기본값 포함
         },
       });
     }
@@ -178,9 +186,16 @@ export async function POST() {
       }
       console.log(`[DB] ${commitsToInsert.length}개 커밋 저장 완료`);
 
-      // 스트릭 업데이트
+      // 스트릭 업데이트 (Admin 권한 사용)
       console.log('스트릭 업데이트 시작...');
-      await updateStreakIncremental(supabase, user.id);
+      const updatedStreak = await updateStreakIncremental(
+        adminSupabase,
+        user.id,
+      );
+      streakInfo = {
+        current_streak: updatedStreak.current,
+        longest_streak: updatedStreak.longest,
+      };
       console.log('스트릭 업데이트 완료!');
     }
 
@@ -203,6 +218,7 @@ export async function POST() {
       total_changes: totalStats.changes,
       languages: Array.from(totalStats.langs),
       is_success: commitsToInsert.length > 0,
+      streak: streakInfo, // 최신 스트릭 정보 포함
     };
 
     return NextResponse.json({

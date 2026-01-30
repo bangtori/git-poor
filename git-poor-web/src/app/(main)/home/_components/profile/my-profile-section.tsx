@@ -11,13 +11,11 @@ import { createClient } from '@/lib/supabase/client';
 interface MyProfileSectionProps {
   user: User;
   initialCommit: TodayCommitSummary; // 서버에서 받아온 초기 데이터
-  streakData: Streak;
 }
 
 export default function MyProfileSection({
   user,
   initialCommit,
-  streakData,
 }: MyProfileSectionProps) {
   const [commitSummary, setCommitSummary] =
     useState<TodayCommitSummary>(initialCommit);
@@ -85,10 +83,10 @@ export default function MyProfileSection({
       <UserProfileCard
         user={user}
         isCommitted={commitSummary.is_success}
-        streakData={streakData}
+        streakData={commitSummary.streak}
       />
 
-      <StreakBadge streakData={streakData} />
+      <StreakBadge streakData={commitSummary.streak} />
 
       <TodayCommitCard
         commit={commitSummary}
