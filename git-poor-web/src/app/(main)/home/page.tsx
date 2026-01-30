@@ -6,6 +6,7 @@ import MyProfileSection from './_components/profile/my-profile-section';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { TodayCommitSummary } from '@/types';
 import { getTodayCommitData } from '@/lib/api-service/commit-service';
+import { getStreakData } from '@/lib/api-service/streak-service';
 
 interface HomePageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -21,11 +22,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     redirect('/');
   }
 
-  const initialCommitData = user
-    ? await getTodayCommitData(supabase, user.id)
-    : null;
+  const [initialCommit, streakData] = await Promise.all([
+    getTodayCommitData(supabase, user.id),
+    getStreakData(supabase, user.id),
+  ]);
 
-  const finalData: TodayCommitSummary = initialCommitData || {
+  const finalData: TodayCommitSummary = initialCommit || {
     date: getGitPoorDate(new Date().toISOString()),
     commit_count: 0,
     total_changes: 0,
@@ -52,14 +54,22 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         {isGroupView ? (
           <GroupSection />
         ) : (
-          <MyProfileSection user={user} initialCommit={finalData} />
+          <MyProfileSection
+            user={user}
+            initialCommit={finalData}
+            streakData={streakData}
+          />
         )}
       </div>
 
       {/* 데스크탑 */}
       <div className="hidden md:grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-5 space-y-6">
-          <MyProfileSection user={user} initialCommit={finalData} />
+          <MyProfileSection
+            user={user}
+            initialCommit={finalData}
+            streakData={streakData}
+          />
         </div>
 
         <div className="col-span-12 lg:col-span-7 space-y-6">

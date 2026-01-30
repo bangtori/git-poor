@@ -3,17 +3,18 @@ import type { User } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { cn } from '@/lib/utils/tailwind-utils';
 import { Flame } from 'lucide-react';
+import { Streak } from '@/types';
 
 interface UserProfileCardProps {
   user: User | null; // 로그아웃 상태일 수도 있으니 null 허용
   isCommitted: boolean;
-  count: number;
+  streakData: Streak;
 }
 
 export const UserProfileCard = ({
   user,
   isCommitted,
-  count,
+  streakData,
 }: UserProfileCardProps) => {
   if (!user) return null; // 유저 정보가 없으면 아무것도 안 그림
 
@@ -57,7 +58,8 @@ export const UserProfileCard = ({
         <div className="flex items-center gap-2 text-orange-500 md:hidden">
           <Flame size={18} fill="currentColor" />
           <span className="font-bold text-text-primary">
-            {count}일 연속 커밋중
+            {streakData.current_streak}일 연속 커밋중 (최대:{' '}
+            {streakData.longest_streak}일)
           </span>
         </div>
       </div>

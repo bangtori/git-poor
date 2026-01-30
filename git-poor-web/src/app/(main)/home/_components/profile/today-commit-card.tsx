@@ -6,9 +6,6 @@ import FilledButton from '@/components/ui/filled-button';
 import { TodayCommitSummary } from '@/types';
 import { cn } from '@/lib/utils/tailwind-utils';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
 interface TodayCommitCardProps {
   currentFine: number;
   commit: TodayCommitSummary;

@@ -5,17 +5,19 @@ import { User } from '@supabase/supabase-js';
 import { UserProfileCard } from './user-profile-card';
 import { StreakBadge } from './streak_badge';
 import TodayCommitCard from './today-commit-card';
-import { TodayCommitSummary } from '@/types';
+import { Streak, TodayCommitSummary } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
 interface MyProfileSectionProps {
   user: User;
   initialCommit: TodayCommitSummary; // 서버에서 받아온 초기 데이터
+  streakData: Streak;
 }
 
 export default function MyProfileSection({
   user,
   initialCommit,
+  streakData,
 }: MyProfileSectionProps) {
   const [commitSummary, setCommitSummary] =
     useState<TodayCommitSummary>(initialCommit);
@@ -83,11 +85,10 @@ export default function MyProfileSection({
       <UserProfileCard
         user={user}
         isCommitted={commitSummary.is_success}
-        count={5} // TODO: 연속학습 일 수 로직 연결
+        streakData={streakData}
       />
 
-      {/* 연속학습 일 수 로직 연결 */}
-      <StreakBadge count={5} />
+      <StreakBadge streakData={streakData} />
 
       <TodayCommitCard
         commit={commitSummary}

@@ -9,14 +9,14 @@ export async function getTodayCommitData(
 ): Promise<TodayCommitSummary> {
   const todayDate = getGitPoorDate(new Date().toISOString());
 
-  // DB 조회 -> commits Table에서 user_id가 접속유저이고, commit_date 가 오늘인 데이터 불러오기
+  // DB 조회
   const { data: commits } = await supabase
-    .from('commits')
+    .from('commits') // 테이블명 확인
     .select('*')
     .eq('user_id', userId)
     .eq('commit_date', todayDate);
 
-  // 데이터 없으면 기본값 리턴
+  // 데이터가 없으면 기본값(0) 리턴
   if (!commits || commits.length === 0) {
     return {
       date: todayDate,
@@ -27,11 +27,13 @@ export async function getTodayCommitData(
     };
   }
 
-  // 데이터 있으면 계산 대시보드용 계산
+  // 데이터 가공 (통계 계산)
   const totalChanges = commits.reduce(
-    (acc: number, curr: any) => acc + curr.total_changes,
+    (acc, curr) => acc + curr.total_changes,
     0,
   );
+
+  // 타입 에러 방지를 위해 as string[] 사용
   const languages = Array.from(
     new Set(commits.flatMap((c: any) => c.languages as string[])),
   ) as string[];

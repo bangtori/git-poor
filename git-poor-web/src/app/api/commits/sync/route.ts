@@ -4,6 +4,8 @@ import { Octokit } from 'octokit';
 import { createClient } from '@/lib/supabase/server';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { getExtension, inferLanguage } from '@/lib/utils/git-info-utils';
+import { updateStreakIncremental } from '@/lib/api-service/streak-service';
+import { createAdminClient } from '@/lib/supabase/admin';
 // ---------------------------------------------------------
 // 메인 로직 (POST)
 // ---------------------------------------------------------
@@ -11,6 +13,7 @@ export async function POST() {
   try {
     // supabase & User 초기화
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -163,18 +166,22 @@ export async function POST() {
 
     await Promise.all(eventPromises);
 
-    // Supabase DB 저장 (Upsert)
+    // Supabase DB 저장 및 스트릭 업데이트
     if (commitsToInsert.length > 0) {
-      const { error } = await supabase
+      const { error: upsertError } = await supabase
         .from('commits')
         .upsert(commitsToInsert, { onConflict: 'user_id, commit_sha' });
 
-      if (error) {
-        console.error('Supabase 저장 에러:', error);
+      if (upsertError) {
+        console.error('Supabase 저장 에러:', upsertError);
         throw new Error('데이터베이스 저장 실패');
       }
-
       console.log(`[DB] ${commitsToInsert.length}개 커밋 저장 완료`);
+
+      // 스트릭 업데이트
+      console.log('스트릭 업데이트 시작...');
+      await updateStreakIncremental(supabase, user.id);
+      console.log('스트릭 업데이트 완료!');
     }
 
     // ---------------------------------------------------------
