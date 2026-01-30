@@ -1,6 +1,7 @@
 // src/app/api/sync-commits/route.ts
 import { NextResponse } from 'next/server';
 import { Octokit } from 'octokit';
+import { createClient } from '@/lib/supabase/server';
 
 // UTC + 4시간 = GitPoor 기준 날짜
 const getGitPoorDate = (isoString: string) => {
@@ -9,6 +10,12 @@ const getGitPoorDate = (isoString: string) => {
   return date.toISOString().split('T')[0];
 };
 
+// 파일명에서 확장자 추출
+const getExtension = (filename: string) => {
+  return filename.split('.').pop()?.toLowerCase() || '';
+};
+
+// 확장자에서 언어 추론
 const inferLanguage = (filename: string) => {
   const ext = filename.split('.').pop()?.toLowerCase();
   const map: Record<string, string> = {
@@ -31,20 +38,54 @@ const inferLanguage = (filename: string) => {
   return map[ext || ''] || 'Other';
 };
 
+// ---------------------------------------------------------
+// 메인 로직 (POST)
+// ---------------------------------------------------------
 export async function POST() {
   try {
-    const token = process.env.GITHUB_ACCESS_TOKEN;
-    const octokit = new Octokit({ auth: token });
-    const { data: user } = await octokit.rest.users.getAuthenticated();
+    // supabase & User 초기화
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
+    if (!session || !session.provider_token) {
+      return NextResponse.json(
+        {
+          error:
+            'GitHub 연결 정보가 만료되었습니다. 로그아웃 후 다시 로그인해주세요.',
+        },
+        { status: 401 },
+      );
+    }
+
+    // 유저 정보 확인 & Octokit 설정
+    const user = session.user;
+    const token = session.provider_token;
+
+    const targetUsername = user.user_metadata.user_name;
+
+    if (!targetUsername) {
+      return NextResponse.json(
+        { error: 'GitHub 계정 정보를 찾을 수 없습니다. (Username Missing)' },
+        { status: 400 },
+      );
+    }
+
+    const octokit = new Octokit({ auth: token });
+
+    // 날짜 설정
     const now = new Date();
     const todayTarget = new Date(now.getTime() + 4 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0];
 
+    console.log(`[서버] 사용자: ${targetUsername}, 타겟 날짜: ${todayTarget}`);
+
+    // github 이벤트 가져오기
     const { data: events } =
       await octokit.rest.activity.listEventsForAuthenticatedUser({
-        username: user.login,
+        username: targetUsername,
         per_page: 30,
       });
 
@@ -70,9 +111,8 @@ export async function POST() {
       });
     }
 
-    let totalAdditions = 0;
-    let totalDeletions = 0;
-    const languageSet = new Set<string>();
+    // 데이터 수집 및 가공 (병렬 처리)
+    const commitsToInsert: any[] = [];
     const processedShas = new Set<string>();
 
     // 모든 푸시 이벤트에 대해 작업을 동시에 시작 -> 병렬 처리
@@ -80,11 +120,11 @@ export async function POST() {
       const repoName = event.repo.name;
       const [owner, repo] = repoName.split('/');
       const payload = event.payload as any;
+      const isPrivate = !event.public;
 
-      // Organization 비상 로직
+      // Organization 로직: commits 목록이 비면 head 커밋 추적
       let targetCommits: string[] =
         payload.commits?.map((c: any) => c.sha) || [];
-
       if (targetCommits.length === 0 && payload.head) {
         targetCommits = [payload.head];
       }
@@ -104,17 +144,47 @@ export async function POST() {
           const commitDate = commitDetail.commit.author?.date;
           if (commitDate && getGitPoorDate(commitDate) === todayTarget) {
             if (!processedShas.has(sha)) {
-              // 이중 체크
+              // 중복 체크
               processedShas.add(sha);
-              totalAdditions += commitDetail.stats?.additions || 0;
-              totalDeletions += commitDetail.stats?.deletions || 0;
+
+              const commitLanguages = new Set<string>();
+              const commitExtensions = new Set<string>();
 
               commitDetail.files?.forEach((file) => {
                 if (file.filename) {
-                  const lang = inferLanguage(file.filename);
-                  if (lang !== 'Other') languageSet.add(lang);
+                  const ext = getExtension(file.filename);
+                  if (ext) {
+                    commitExtensions.add(ext);
+                    const lang = inferLanguage(ext);
+                    if (lang !== 'Other') commitLanguages.add(lang);
+                  }
                 }
               });
+
+              // DB Insert 용 객체 생성
+              const commitRow = {
+                user_id: user.id,
+                commit_sha: sha,
+                repo_name: repoName,
+                committed_at: commitDate,
+                commit_date: todayTarget,
+
+                change_files: commitDetail.files?.length || 0,
+                additions: commitDetail.stats?.additions || 0,
+                deletions: commitDetail.stats?.deletions || 0,
+                total_changes:
+                  (commitDetail.stats?.additions || 0) +
+                  (commitDetail.stats?.deletions || 0),
+
+                languages: Array.from(commitLanguages),
+                file_extensions: Array.from(commitExtensions),
+
+                is_private: isPrivate,
+                commit_url: commitDetail.html_url,
+                created_at: new Date().toISOString(),
+              };
+
+              commitsToInsert.push(commitRow);
             }
           }
         } catch (err) {
@@ -127,23 +197,44 @@ export async function POST() {
 
     await Promise.all(eventPromises);
 
+    // Supabase DB 저장 (Upsert)
+    if (commitsToInsert.length > 0) {
+      const { error } = await supabase
+        .from('commits')
+        .upsert(commitsToInsert, { onConflict: 'user_id, commit_sha' });
+
+      if (error) {
+        console.error('Supabase 저장 에러:', error);
+        throw new Error('데이터베이스 저장 실패');
+      }
+
+      console.log(`[DB] ${commitsToInsert.length}개 커밋 저장 완료`);
+    }
+
+    // ---------------------------------------------------------
+    // 결과 반환
+    // ---------------------------------------------------------
+
+    // 삽입된 데이터 기준으로 통계 집계
+    const totalStats = commitsToInsert.reduce(
+      (acc, curr) => ({
+        changes: acc.changes + curr.total_changes,
+        langs: new Set([...acc.langs, ...curr.languages]),
+      }),
+      { changes: 0, langs: new Set<string>() },
+    );
+
     const resultData = {
       date: todayTarget,
-      commit_count: processedShas.size,
-      total_changes: totalAdditions + totalDeletions,
-      languages: Array.from(languageSet),
-      is_success: processedShas.size > 0,
+      commit_count: commitsToInsert.length,
+      total_changes: totalStats.changes,
+      languages: Array.from(totalStats.langs),
+      is_success: commitsToInsert.length > 0,
     };
-
-    console.log('[서버] 최종 결과:', resultData);
-
-    // ==========================================
-    // TODO: Supabase DB 저장 로직이 들어갈 자리
-    // ==========================================
 
     return NextResponse.json({
       success: true,
-      message: '분석 완료',
+      message: '분석 및 저장 완료',
       data: resultData,
     });
   } catch (error: any) {
