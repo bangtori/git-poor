@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams, usePathname } from 'next/navigation';
 import { Home, Users, History } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/tailwind-utils';
 
 export function MobileBottomNav() {
   const pathname = usePathname();
