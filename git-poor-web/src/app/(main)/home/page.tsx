@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Headers } from '@/components/common/headers';
@@ -46,37 +47,37 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-background text-white p-8">
-      <Headers user={user} />
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background text-white p-8">
+          로딩 중...
+        </div>
+      }
+    >
+      <div className="min-h-screen bg-background text-white p-8">
+        <Headers user={user} />
 
-      {/* 모바일 */}
-      <div className="block md:hidden">
-        {isGroupView ? (
-          <GroupSection />
-        ) : (
-          <MyProfileSection
-            user={user}
-            initialCommit={finalData}
-            streakData={streakData}
-          />
-        )}
-      </div>
-
-      {/* 데스크탑 */}
-      <div className="hidden md:grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-5 space-y-6">
-          <MyProfileSection
-            user={user}
-            initialCommit={finalData}
-            streakData={streakData}
-          />
+        {/* 모바일 */}
+        <div className="block md:hidden">
+          {isGroupView ? (
+            <GroupSection />
+          ) : (
+            <MyProfileSection user={user} initialCommit={finalData} />
+          )}
         </div>
 
-        <div className="col-span-12 lg:col-span-7 space-y-6">
-          <h2 className="text-2xl font-bold mb-2">그룹 현황</h2>
-          <GroupSection />
+        {/* 데스크탑 */}
+        <div className="hidden md:grid grid-cols-12 gap-6">
+          <div className="col-span-12 lg:col-span-5 space-y-6">
+            <MyProfileSection user={user} initialCommit={finalData} />
+          </div>
+
+          <div className="col-span-12 lg:col-span-7 space-y-6">
+            <h2 className="text-2xl font-bold mb-2">그룹 현황</h2>
+            <GroupSection />
+          </div>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 }

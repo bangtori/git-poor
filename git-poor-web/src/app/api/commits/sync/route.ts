@@ -8,6 +8,7 @@ import {
   getStreakData,
 } from '@/lib/api-service/streak-service';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { refreshGitHubToken } from '@/lib/api-service/auth-service';
 
 // ---------------------------------------------------------
 // 메인 로직 (POST)
@@ -20,19 +21,62 @@ export async function POST() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-
-    if (!session || !session.provider_token) {
+    if (!session) {
       return NextResponse.json(
-        {
-          error:
-            'GitHub 연결 정보가 만료되었습니다. 로그아웃 후 다시 로그인해주세요.',
-        },
+        { error: '인증 정보가 없습니다.' },
         { status: 401 },
       );
     }
 
-    // 유저 정보 확인 & Octokit 설정
     const user = session.user;
+    // 토큰 만료 체크 및 리프레쉬 로직
+    const { data: tokenData } = await adminSupabase
+      .from('tokens')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // 2. 사용할 토큰 결정 (기본값: 세션 토큰, 없으면 DB 토큰)
+    let currentToken = session.provider_token || tokenData?.access_token;
+
+    // 3. 만료 체크 및 갱신 시도
+    if (tokenData && tokenData.token_expires_at) {
+      const isExpired =
+        new Date(tokenData.token_expires_at).getTime() <
+        Date.now() + 5 * 60 * 1000;
+
+      if (isExpired && tokenData.refresh_token) {
+        console.log('🔄 토큰 만료 임박: 리프레쉬 시도...');
+        const refreshRes = await refreshGitHubToken(tokenData.refresh_token);
+
+        if (refreshRes.access_token) {
+          await adminSupabase.from('tokens').upsert(
+            {
+              user_id: user.id,
+              access_token: refreshRes.access_token,
+              refresh_token:
+                refreshRes.refresh_token || tokenData.refresh_token,
+              token_expires_at: new Date(
+                Date.now() + refreshRes.expires_in * 1000,
+              ).toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id' },
+          );
+
+          currentToken = refreshRes.access_token;
+          console.log('✅ 토큰 갱신 완료');
+        }
+      }
+    }
+
+    if (!currentToken) {
+      return NextResponse.json(
+        { error: 'GitHub 연결 정보가 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 },
+      );
+    }
+    // 유저 정보 확인 & Octokit 설정
     const token = session.provider_token;
 
     const targetUsername = user.user_metadata.user_name;
