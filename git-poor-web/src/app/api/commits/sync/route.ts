@@ -76,7 +76,7 @@ export async function POST() {
         { status: 401 },
       );
     }
-    // 유저 정보 확인 & Octokit 설정
+
     const token = session.provider_token;
 
     const targetUsername = user.user_metadata.user_name;
@@ -87,6 +87,7 @@ export async function POST() {
         { status: 400 },
       );
     }
+    // ------------ User 정보 초기화 로직 끝 ------------------
 
     const octokit = new Octokit({ auth: token });
 
@@ -94,13 +95,11 @@ export async function POST() {
     const now = new Date();
     const todayTarget = getGitPoorDate(now.toISOString()); // 기존 유틸 함수 사용
 
-    console.log(`[서버] 사용자: ${targetUsername}, 타겟 날짜: ${todayTarget}`);
-
     // github 이벤트 가져오기
     const { data: events } =
       await octokit.rest.activity.listEventsForAuthenticatedUser({
         username: targetUsername,
-        per_page: 30,
+        per_page: 100,
       });
 
     // 오늘자 푸시이벤트 필터링
@@ -143,11 +142,38 @@ export async function POST() {
       const payload = event.payload as any;
       const isPrivate = !event.public;
 
-      // Organization 로직: commits 목록이 비면 head 커밋 추적
+      // commits 목록이 있다면 담고 아니라면 head로 추적하기
       let targetCommits: string[] =
         payload.commits?.map((c: any) => c.sha) || [];
       if (targetCommits.length === 0 && payload.head) {
         targetCommits = [payload.head];
+      }
+
+      // before와 head가 살아있다면, 그 사이를 전부 조회
+      const isComparisonPossible =
+        payload.before &&
+        payload.head &&
+        payload.before !== '0000000000000000000000000000000000000000';
+
+      if (isComparisonPossible) {
+        try {
+          const { data: comparison } = await octokit.rest.repos.compareCommits({
+            owner,
+            repo,
+            base: payload.before,
+            head: payload.head,
+          });
+
+          // 사이 commit 들의 sha 추가
+          if (comparison.commits.length > 0) {
+            targetCommits = comparison.commits.map((c) => c.sha);
+          }
+        } catch (error) {
+          console.error(
+            `Compare API 실패 (${repoName}), 기본값(Head) 유지:`,
+            error,
+          );
+        }
       }
 
       // 한 이벤트 내의 커밋들도 병렬로 조회
@@ -155,6 +181,7 @@ export async function POST() {
         if (processedShas.has(sha)) return;
 
         try {
+          // 커밋별 정보 가져오기
           const { data: commitDetail } = await octokit.rest.repos.getCommit({
             owner,
             repo,
