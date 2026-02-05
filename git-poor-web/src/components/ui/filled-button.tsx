@@ -20,7 +20,7 @@ const FilledButton = ({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'w-full py-3 font-bold text-text-primary transition-all duration-200 rounded-xl',
+        'px-4 py-3 font-bold text-text-primary transition-all duration-200 rounded-xl',
         backgroundClass,
         className,
       )}

@@ -73,7 +73,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           <div className="col-span-12 lg:col-span-7 space-y-6">
-            <h2 className="text-2xl font-bold mb-2">Group</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold mb-2">Group</h2>
+            </div>
             <GroupSection />
           </div>
         </div>
