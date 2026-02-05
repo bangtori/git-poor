@@ -76,7 +76,7 @@ export async function POST() {
         { status: 401 },
       );
     }
-    // 유저 정보 확인 & Octokit 설정
+
     const token = session.provider_token;
 
     const targetUsername = user.user_metadata.user_name;
@@ -87,6 +87,7 @@ export async function POST() {
         { status: 400 },
       );
     }
+    // ------------ User 정보 초기화 로직 끝 ------------------
 
     const octokit = new Octokit({ auth: token });
 
@@ -94,13 +95,11 @@ export async function POST() {
     const now = new Date();
     const todayTarget = getGitPoorDate(now.toISOString()); // 기존 유틸 함수 사용
 
-    console.log(`[서버] 사용자: ${targetUsername}, 타겟 날짜: ${todayTarget}`);
-
     // github 이벤트 가져오기
     const { data: events } =
       await octokit.rest.activity.listEventsForAuthenticatedUser({
         username: targetUsername,
-        per_page: 30,
+        per_page: 100,
       });
 
     // 오늘자 푸시이벤트 필터링
@@ -109,9 +108,6 @@ export async function POST() {
         event.type === 'PushEvent' &&
         getGitPoorDate(event.created_at!) === todayTarget,
     );
-
-    // 스트릭 데이터를 담을 변수
-    let streakInfo = { current_streak: 0, longest_streak: 0 };
 
     // 커밋이 없으면 null 대신 비워진 데이터 반환
     if (todayPushEvents.length === 0) {
@@ -136,6 +132,15 @@ export async function POST() {
     const commitsToInsert: any[] = [];
     const processedShas = new Set<string>();
 
+    // 이미 DB에 저장된 오늘자 커밋 SHA 미리 조회
+    const { data: existingCommits } = await supabase
+      .from('commits')
+      .select('commit_sha')
+      .eq('user_id', user.id)
+      .eq('commit_date', todayTarget);
+
+    const existingShaSet = new Set(existingCommits?.map((c) => c.commit_sha));
+
     // 모든 푸시 이벤트에 대해 작업을 동시에 시작 -> 병렬 처리
     const eventPromises = todayPushEvents.map(async (event) => {
       const repoName = event.repo.name;
@@ -143,18 +148,56 @@ export async function POST() {
       const payload = event.payload as any;
       const isPrivate = !event.public;
 
-      // Organization 로직: commits 목록이 비면 head 커밋 추적
+      // commits 목록이 있다면 담고 아니라면 head로 추적하기
       let targetCommits: string[] =
         payload.commits?.map((c: any) => c.sha) || [];
       if (targetCommits.length === 0 && payload.head) {
         targetCommits = [payload.head];
       }
 
+      // before와 head가 살아있다면, 그 사이를 전부 조회
+      const isComparisonPossible =
+        payload.before &&
+        payload.head &&
+        payload.before !== '0000000000000000000000000000000000000000';
+
+      if (isComparisonPossible) {
+        try {
+          const { data: comparison } = await octokit.rest.repos.compareCommits({
+            owner,
+            repo,
+            base: payload.before,
+            head: payload.head,
+          });
+
+          // 사이 commit 들의 sha 추가
+          if (comparison.commits.length > 0) {
+            targetCommits = comparison.commits.map((c) => c.sha);
+          }
+        } catch (error) {
+          console.error(
+            `Compare API 실패 (${repoName}), 기본값(Head) 유지:`,
+            error,
+          );
+        }
+      }
+
+      // 이미 DB에 있는 SHA는 작업 대상에서 제외 -> 최적화
+      const newCommitsToFetch = targetCommits.filter(
+        (sha) => !existingShaSet.has(sha),
+      );
+
+      if (newCommitsToFetch.length === 0) {
+        // 새로 가져올 게 없으면 이 이벤트는 패스
+        return;
+      }
+
       // 한 이벤트 내의 커밋들도 병렬로 조회
-      const commitPromises = targetCommits.map(async (sha) => {
+      const commitPromises = newCommitsToFetch.map(async (sha) => {
         if (processedShas.has(sha)) return;
 
         try {
+          // 커밋별 정보 가져오기
           const { data: commitDetail } = await octokit.rest.repos.getCommit({
             owner,
             repo,
@@ -218,7 +261,7 @@ export async function POST() {
 
     await Promise.all(eventPromises);
 
-    // Supabase DB 저장 및 스트릭 업데이트
+    // Supabase DB 저장
     if (commitsToInsert.length > 0) {
       const { error: upsertError } = await supabase
         .from('commits')
@@ -229,26 +272,23 @@ export async function POST() {
         throw new Error('데이터베이스 저장 실패');
       }
       console.log(`[DB] ${commitsToInsert.length}개 커밋 저장 완료`);
-
-      // 스트릭 업데이트 (Admin 권한 사용)
-      console.log('스트릭 업데이트 시작...');
-      const updatedStreak = await updateStreakIncremental(
-        adminSupabase,
-        user.id,
-      );
-      streakInfo = {
-        current_streak: updatedStreak.current,
-        longest_streak: updatedStreak.longest,
-      };
-      console.log('스트릭 업데이트 완료!');
+    } else {
+      console.log(`[DB] 신규 커밋 없음 (이미 최신)`);
     }
 
     // ---------------------------------------------------------
-    // 결과 반환
+    // 스트릭 업데이트 및 결과 반환
     // ---------------------------------------------------------
+    const updatedStreak = await updateStreakIncremental(adminSupabase, user.id);
 
-    // 삽입된 데이터 기준으로 통계 집계
-    const totalStats = commitsToInsert.reduce(
+    // [보완] 오늘자 최종 통계를 위해 DB 다시 조회 (insert된 것 포함)
+    const { data: allTodayCommits } = await supabase
+      .from('commits')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('commit_date', todayTarget);
+
+    const totalStats = (allTodayCommits || []).reduce(
       (acc, curr) => ({
         changes: acc.changes + curr.total_changes,
         langs: new Set([...acc.langs, ...curr.languages]),
@@ -256,19 +296,23 @@ export async function POST() {
       { changes: 0, langs: new Set<string>() },
     );
 
-    const resultData = {
-      date: todayTarget,
-      commit_count: commitsToInsert.length,
-      total_changes: totalStats.changes,
-      languages: Array.from(totalStats.langs),
-      is_success: commitsToInsert.length > 0,
-      streak: streakInfo, // 최신 스트릭 정보 포함
-    };
-
     return NextResponse.json({
       success: true,
-      message: '분석 및 저장 완료',
-      data: resultData,
+      message:
+        commitsToInsert.length > 0
+          ? '신규 커밋 업데이트 완료'
+          : '최신 상태입니다.',
+      data: {
+        date: todayTarget,
+        commit_count: allTodayCommits?.length || 0,
+        total_changes: totalStats.changes,
+        languages: Array.from(totalStats.langs),
+        is_success: true,
+        streak: {
+          current_streak: updatedStreak.current,
+          longest_streak: updatedStreak.longest,
+        },
+      },
     });
   } catch (error: any) {
     console.error('API Error:', error);
