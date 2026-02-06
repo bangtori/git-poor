@@ -8,6 +8,7 @@ import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { TodayCommitSummary } from '@/types';
 import { getTodayCommitData } from '@/lib/api-service/commit-service';
 import { getStreakData } from '@/lib/api-service/streak-service';
+import { getCachedUser } from '@/lib/utils/auth-utils';
 
 interface HomePageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -15,9 +16,8 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  const user = await getCachedUser();
 
   if (!user) {
     redirect('/');
@@ -55,7 +55,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       }
     >
       <div className="min-h-screen bg-background text-white p-8">
-        <Headers user={user} />
         {/* 모바일 */}
         <div className="block md:hidden">
           {isGroupView ? (

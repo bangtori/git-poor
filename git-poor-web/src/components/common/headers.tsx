@@ -13,7 +13,7 @@ export function Headers({ user }: AuthProps) {
   };
 
   return (
-    <header className="flex justify-between items-center mb-12">
+    <header className="flex justify-between items-center">
       <div>
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
           GitPoor

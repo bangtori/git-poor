@@ -13,7 +13,7 @@ export default function GroupListSection() {
     <div className="w-full min-h-screen text-white">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold mb-4">Group</h2>
-        {/* TODO: - Link 변경 */}
+        {/* TODO: - Add 모달 연결 */}
         <div className="flex gap-2 items-center text-primary hover:text-primary-hover">
           <SquarePlus size={20} />
           <span className="font-bold">Add</span>
