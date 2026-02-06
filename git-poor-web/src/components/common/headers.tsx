@@ -18,7 +18,7 @@ export function Headers({ user }: AuthProps) {
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
           GitPoor
         </h1>
-        <p className="text-gray-400 mt-1">
+        <p className="text-gray-400 mt-1 hidden md:block">
           <span className="text-primary font-semibold">
             {user.user_metadata.user_name}
           </span>

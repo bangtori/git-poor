@@ -9,7 +9,7 @@ const DefaultCard = ({
   title = '',
 }: PropsWithChildren<DefaultCardProps>) => {
   return (
-    <div className="w-full my-8">
+    <div className="w-full">
       {title.length > 0 ? (
         <h2 className="mb-4 text-xl text-text-primary font-bold">{title}</h2>
       ) : undefined}

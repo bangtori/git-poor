@@ -56,7 +56,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     >
       <div className="min-h-screen bg-background text-white p-8">
         <Headers user={user} />
-
         {/* 모바일 */}
         <div className="block md:hidden">
           {isGroupView ? (
@@ -73,9 +72,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           <div className="col-span-12 lg:col-span-7 space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold mb-2">Group</h2>
-            </div>
             <GroupSection />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import FilledButton from '@/components/ui/filled-button';
-import { Users } from 'lucide-react';
+import { Users, SquarePlus } from 'lucide-react';
+import Link from 'next/link';
 const dummyData = Array.from({ length: 4 }).map((_, i) => ({
   id: i,
   title: 'Room Title',
@@ -10,6 +11,14 @@ const dummyData = Array.from({ length: 4 }).map((_, i) => ({
 export default function GroupListSection() {
   return (
     <div className="w-full min-h-screen text-white">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold mb-4">Group</h2>
+        {/* TODO: - Link 변경 */}
+        <div className="flex gap-2 items-center text-primary hover:text-primary-hover">
+          <SquarePlus size={20} />
+          <span className="font-bold">Add</span>
+        </div>
+      </div>
       {/* [컨테이너 레이아웃]
         - 기본(모바일): grid grid-cols-2 (2열 카드)
         - md(데스크탑): flex flex-col (1열 리스트) 
