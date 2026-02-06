@@ -16,7 +16,7 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const supabase = await createClient();
-
+  console.log('Page 렌더링');
   const user = await getCachedUser();
 
   if (!user) {
