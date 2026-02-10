@@ -2,6 +2,7 @@
 import type { AuthProps } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export function Headers({ user }: AuthProps) {
   const supabase = createClient();
@@ -14,17 +15,22 @@ export function Headers({ user }: AuthProps) {
 
   return (
     <header className="flex justify-between items-center">
-      <div>
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
-          GitPoor
-        </h1>
-        <p className="text-gray-400 mt-1 hidden md:block">
-          <span className="text-primary font-semibold">
-            {user.user_metadata.user_name}
-          </span>
-          님의 벌금 장부 💸
-        </p>
-      </div>
+      <Link
+        href="/home"
+        className="cursor-pointer hover:opacity-80 transition-opacity"
+      >
+        <div>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+            GitPoor
+          </h1>
+          <p className="text-gray-400 mt-1 hidden md:block">
+            <span className="text-primary font-semibold">
+              {user.user_metadata.user_name}
+            </span>
+            님의 벌금 장부 💸
+          </p>
+        </div>
+      </Link>
 
       <button
         onClick={handleLogout}
