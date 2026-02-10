@@ -25,6 +25,26 @@ export const inferLanguage = (ext: string): string => {
     rs: 'Rust',
     rb: 'Ruby',
     php: 'PHP',
+    cs: 'C#',
+    sh: 'Shell',
+    bash: 'Shell',
+    sql: 'SQL',
+    md: 'Markdown',
+    markdown: 'Markdown',
+    yaml: 'YAML',
+    yml: 'YAML',
+    json: 'JSON',
+    scss: 'SCSS',
+    sass: 'SASS',
+    less: 'LESS',
+
+    h: 'C/C++',
+    hpp: 'C++',
+
+    lua: 'Lua',
+    r: 'R',
+    sol: 'Solidity',
+    pl: 'Perl',
   };
   return map[ext] || 'Other';
 };
