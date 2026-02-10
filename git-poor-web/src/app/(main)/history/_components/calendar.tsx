@@ -101,7 +101,6 @@ export default function HistoryCalendar() {
           const stat = historyMap[dayData.fullDate];
           const totalChanges = stat?.total_changes || 0;
           const level = getGrassClass(totalChanges);
-          console.log('----totalChanges:' + totalChanges);
 
           return (
             <div
