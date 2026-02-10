@@ -1,16 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { isToday, addMonths, subMonths } from 'date-fns';
-import { getCalendarDate } from '@/lib/utils/calendar-utils'; // 작성하신 유틸 함수 경로
+import { getCalendarDate, getGrassClass } from '@/lib/utils/calendar-utils'; // 작성하신 유틸 함수 경로
 import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
 // 요일 헤더 값
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
+interface DailyStat {
+  commit_date: string;
+  commit_count: number;
+  total_changes: number;
+}
+
 export default function HistoryCalendar() {
   // 현재 보고 있는 달력의 기준 날짜 (기본값: 오늘)
   const [currentDate, setCurrentDate] = useState(new Date());
+  // 커밋 데이터 (날짜를 키로 하는 객체 형태)
+  const [historyMap, setHistoryMap] = useState<Record<string, DailyStat>>({});
 
   //  년, 월 추출
   const currentYear = currentDate.getFullYear();
@@ -27,6 +35,33 @@ export default function HistoryCalendar() {
       return new Date(newDate.getFullYear(), newDate.getMonth(), 1);
     });
   }
+
+  // 월이 바뀌거나 초기 렌더링 시 데이터 로드
+  useEffect(() => {
+    const fetchCommitHistory = async () => {
+      // 캘린더 그리드의 가장 첫 날짜와 마지막 날짜를 구함 (YYYY-MM-DD)
+      if (calendarDays.length === 0) return;
+
+      const fromDate = calendarDays[0].fullDate;
+      const toDate = calendarDays[calendarDays.length - 1].fullDate;
+
+      try {
+        // API 호출
+        const res = await fetch(
+          `/api/commits/history?from=${fromDate}&to=${toDate}`,
+        );
+        if (!res.ok) throw new Error('Failed to fetch');
+
+        const data = await res.json();
+        setHistoryMap(data); // 데이터 저장
+      } catch (error) {
+        console.error('커밋 히스토리 로딩 실패:', error);
+      }
+    };
+
+    fetchCommitHistory();
+  }, [currentDate]);
+
   return (
     <section className="w-full flex flex-col justify-center px-3 py-4 md:px-6">
       {/* TODO: - 나중에 Picker 이용해서 한번에 이동 가능하도록 수정 */}
@@ -62,10 +97,16 @@ export default function HistoryCalendar() {
       </div>
       {/* Calendar Grid 날짜 영역 */}
       <div className="grid grid-cols-7 gap-y-2 gap-x-1">
-        {calendarDays.map((dayData) => (
-          <div
-            key={dayData.fullDate}
-            className={`
+        {calendarDays.map((dayData) => {
+          const stat = historyMap[dayData.fullDate];
+          const totalChanges = stat?.total_changes || 0;
+          const level = getGrassClass(totalChanges);
+          console.log('----totalChanges:' + totalChanges);
+
+          return (
+            <div
+              key={dayData.fullDate}
+              className={`
                 aspect-square rounded-lg cursor-pointer transition-all
                 flex flex-col items-center justify-between p-2 md:justify-center md:relative
                 text-sm relative bg-background-card
@@ -77,22 +118,27 @@ export default function HistoryCalendar() {
                     : 'text-text-primary'
                 }
               `}
-          >
-            {/* 오늘이면 날짜 색상 다르게 */}
-            <span
-              className={`text-sm font-bold self-start 
+              title={`${dayData.fullDate}: ${totalChanges} lines`}
+            >
+              {/* 오늘이면 날짜 색상 다르게 */}
+              <span
+                className={`text-sm font-bold self-start 
                 md:absolute md:top-2 md:left-2 md:text-xl 
                 ${isToday(dayData.dateObj) ? 'text-primary' : ''}`}
-            >
-              {dayData.day}
-            </span>
-            {/* TODO: - 잔디 아이콘 색상*/}
-            <Leaf
-              size={10}
-              className={`w-5 h-5 md:w-8 md:h-8 lg:w-10 lg:h-10 ${dayData.isCurrentMonth ? 'text-primary' : 'text-primary-dim'}`}
-            />
-          </div>
-        ))}
+              >
+                {dayData.day}
+              </span>
+              <Leaf
+                size={10}
+                className={`
+                  w-5 h-5 md:w-8 md:h-8 lg:w-10 lg:h-10 
+                  transition-colors duration-300
+                  ${level} 
+                `}
+              />
+            </div>
+          );
+        })}
       </div>
     </section>
   );

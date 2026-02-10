@@ -33,3 +33,11 @@ export const getCalendarDate = (
     isCurrentMonth: isSameMonth(date, baseDate),
   }));
 };
+
+export function getGrassClass(changes: number): string {
+  if (changes <= 0) return 'text-grass-0';
+  if (changes <= 15) return 'text-grass-1';
+  if (changes <= 60) return 'text-grass-2';
+  if (changes <= 150) return 'text-grass-3';
+  return 'text-grass-4';
+}
