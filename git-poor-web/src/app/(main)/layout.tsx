@@ -1,13 +1,23 @@
 import { Suspense } from 'react'; // 1. Suspense 임포트
 import { MobileBottomNav } from '@/components/common/moblie-bottom-nav';
-
-export default function MainLayout({
+import { getCachedUser } from '@/lib/utils/auth-utils';
+import { Headers } from '@/components/common/headers';
+import { redirect } from 'next/navigation';
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  console.log('Layout 렌더링');
+  const user = await getCachedUser();
+  if (!user) {
+    redirect('/');
+  }
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+    <div className="min-h-screen bg-background text-white flex flex-col">
+      <div className="bg-background text-white p-8 pb-0">
+        <Headers user={user} />
+      </div>
       {/* 메인 콘텐츠 영역 */}
       <main className="flex-1 w-full">
         <div className="pb-20 md:pb-0 h-full">{children}</div>

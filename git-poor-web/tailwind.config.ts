@@ -38,7 +38,7 @@ const config: Config = {
 
         // 5. 잔디 색상 (Contribution Levels)
         grass: {
-          0: '#161b22', // 없음
+          0: '#3f3f46', // 없음
           1: '#0e4429', // 조금
           2: '#006d32', // 중간
           3: '#26a641', // 많음

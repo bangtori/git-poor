@@ -1,6 +1,8 @@
 import DefaultCard from '@/components/ui/default-card';
+import FilledButton from '@/components/ui/filled-button';
 import { Streak } from '@/types';
 import { Flame } from 'lucide-react';
+import Link from 'next/link';
 
 export const StreakBadge = ({ streakData }: { streakData: Streak }) => {
   return (
@@ -19,6 +21,9 @@ export const StreakBadge = ({ streakData }: { streakData: Streak }) => {
               연속 커밋을 향해 화이팅해요!
             </p>
           </div>
+          <Link href="/history" className="w-full hidden md:block">
+            <FilledButton className="w-full">History 보러가기</FilledButton>
+          </Link>
         </div>
       </DefaultCard>
     </div>
