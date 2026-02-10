@@ -18,7 +18,13 @@ import { createClient } from '@/lib/supabase/server';
  *
  * @response 200 (OK)
  * - 성공적으로 데이터를 반환함.
- * - Type: Array<{ commit_date: string, commit_count: number, is_success: boolean }>
+ * - Type: Record<string, { commit_date: string, commit_count: number, total_changes: number }>
+ * - Structure:
+ * {
+ * "2026-02-01": { "commit_date": "2026-02-01", "commit_count": 3, "total_changes": 150 },
+ * "2026-02-02": { "commit_date": "2026-02-02", "commit_count": 0, "total_changes": 0 },
+ * ...
+ * }
  *
  * @response 400 (Bad Request)
  * - 필수 파라미터(from, to)가 누락되었을 때 발생.

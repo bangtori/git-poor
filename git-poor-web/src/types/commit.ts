@@ -60,3 +60,22 @@ export interface TodayCommitSummary {
   is_success: boolean; // 커밋 여부 (total_changes > 0)
   streak: Streak;
 }
+
+/**
+ * 특정 날짜 커밋 데이터 디테일 전용 타입
+ */
+
+// src/types/commit.ts
+
+export interface CommitDetail {
+  id: number;
+  repo_name: string;
+  commit_sha: string;
+  commit_url: string;
+  total_changes: number;
+  additions: number;
+  deletions: number;
+  languages: string[];
+  committed_at: string; // ISO Date string
+  commit_date: string;
+}

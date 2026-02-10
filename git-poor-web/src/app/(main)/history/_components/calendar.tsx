@@ -14,7 +14,14 @@ interface DailyStat {
   total_changes: number;
 }
 
-export default function HistoryCalendar() {
+interface HistoryCalendarProps {
+  // 날짜 문자열(예: '2026-02-10')을 인자로 받음
+  onDateSelect: (date: string) => void;
+}
+
+export default function HistoryCalendar({
+  onDateSelect,
+}: HistoryCalendarProps) {
   // 현재 보고 있는 달력의 기준 날짜 (기본값: 오늘)
   const [currentDate, setCurrentDate] = useState(new Date());
   // 커밋 데이터 (날짜를 키로 하는 객체 형태)
@@ -103,7 +110,8 @@ export default function HistoryCalendar() {
           const level = getGrassClass(totalChanges);
 
           return (
-            <div
+            <button
+              onClick={() => onDateSelect(dayData.fullDate)}
               key={dayData.fullDate}
               className={`
                 aspect-square rounded-lg cursor-pointer transition-all
@@ -135,7 +143,7 @@ export default function HistoryCalendar() {
                   ${level} 
                 `}
               />
-            </div>
+            </button>
           );
         })}
       </div>
