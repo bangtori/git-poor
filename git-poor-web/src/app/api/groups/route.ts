@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/utils/auth-utils';
+import { GroupRole } from '@/types';
 
 /**
  * -----------------------------------------------------------------------------
@@ -43,4 +44,104 @@ import { getCachedUser } from '@/lib/utils/auth-utils';
  * - DB Insert 실패 또는 서버 에러 발생 시.
  * -----------------------------------------------------------------------------
  */
-export async function POST(request: Request) {}
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      name,
+      penalty_title,
+      apply_penalty_weekend,
+      timezone,
+      day_start_hour,
+    } = body;
+
+    const user = await getCachedUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: '인증 정보가 없습니다.' },
+        { status: 401 },
+      );
+    }
+
+    if (!name?.trim()) {
+      return NextResponse.json(
+        { error: '그룹 이름은 필수입니다.' },
+        { status: 400 },
+      );
+    }
+
+    if (!penalty_title?.trim()) {
+      return NextResponse.json(
+        { error: '벌칙 내용은 필수입니다.' },
+        { status: 400 },
+      );
+    }
+
+    if (
+      typeof day_start_hour === 'number' &&
+      (day_start_hour < 0 || day_start_hour > 23)
+    ) {
+      return NextResponse.json(
+        { error: '시작 시간은 0시부터 23시 사이여야 합니다.' },
+        { status: 400 },
+      );
+    }
+
+    // 데이터 저장
+    const saveGroupData = {
+      owner_id: user.id,
+      name,
+      timezone: timezone || 'Asia/Seoul',
+      day_start_hour: day_start_hour ?? 5,
+      penalty_title,
+      apply_penalty_weekend: apply_penalty_weekend || true,
+    };
+
+    const supabase = await createClient();
+    const { data: groupData, error: addGroupError } = await supabase
+      .from('groups')
+      .insert(saveGroupData)
+      .select()
+      .single();
+
+    if (addGroupError) {
+      console.log('그룹 생성 에러' + addGroupError.message);
+      return NextResponse.json(
+        { error: '그룹 생성하는데 문제가 발생했습니다.' },
+        { status: 500 },
+      );
+    }
+
+    const { error: addGroupMemberError } = await supabase
+      .from('group_members')
+      .insert([
+        { group_id: groupData.id, user_id: user.id, role: GroupRole.OWNER },
+      ])
+      .select();
+
+    if (addGroupMemberError) {
+      console.log('그룹 멤버 테이블 추가 에러' + addGroupMemberError.message);
+      // 롤백: 방금 만든 그룹 삭제
+      await supabase.from('groups').delete().eq('id', groupData.id);
+      return NextResponse.json(
+        { error: '그룹 생성하는데 문제가 발생했습니다.' },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: groupData,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error('error: ' + error);
+    return NextResponse.json(
+      { error: '서버 에러가 발생했습니다.' },
+      { status: 500 },
+    );
+  }
+}

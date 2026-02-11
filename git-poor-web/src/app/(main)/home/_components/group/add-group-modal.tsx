@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils/tailwind-utils';
 interface AddGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 그룹 생성 성공 시 부모에게 알리기 위한 콜백 (예: 목록 새로고침) */
   onCreated?: () => void;
 }
 const RECOMMENDED_PENALTIES = [
@@ -58,8 +59,36 @@ export default function AddGroupModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('제출');
-    onClose();
+    if (!formData.name || !formData.penalty_title) {
+      alert('그룹 이름과 벌칙 이름은 필수입니다.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!response.ok) throw new Error('그룹 생성에 실패했습니다.');
+
+      setFormData({
+        name: '',
+        penalty_title: '',
+        day_start_hour: 5,
+        apply_penalty_weekend: false,
+      });
+
+      onCreated?.();
+      onClose();
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      alert('그룹을 생성하는데 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
   return (
     <Modal

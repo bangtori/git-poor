@@ -4,6 +4,7 @@ import { Users, SquarePlus } from 'lucide-react';
 import { useState } from 'react';
 import AddGroupModal from './add-group-modal';
 import { cn } from '@/lib/utils/tailwind-utils';
+import { useRouter } from 'next/navigation';
 
 const dummyData = Array.from({ length: 4 }).map((_, i) => ({
   id: i,
@@ -14,7 +15,7 @@ const dummyData = Array.from({ length: 4 }).map((_, i) => ({
 
 export default function GroupListSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const router = useRouter();
   return (
     <div className="w-full min-h-screen text-white">
       <div className="flex justify-between items-center">
@@ -31,8 +32,8 @@ export default function GroupListSection() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreated={() => {
-          console.log('생성 완료! 리스트를 새로고침 하세요.');
-          // 필요한 경우 여기서 추가 로직 실행
+          console.log('생성 완료! 서버 데이터 다시 불러오는 중...');
+          router.refresh();
         }}
       />
       {/* [컨테이너 레이아웃]
