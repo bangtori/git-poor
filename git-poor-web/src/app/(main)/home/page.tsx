@@ -1,14 +1,15 @@
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Headers } from '@/components/common/headers';
 import GroupListSection from './_components/group/group-list';
 import MyProfileSection from './_components/profile/my-profile-section';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { TodayCommitSummary } from '@/types';
 import { getTodayCommitData } from '@/lib/api-service/commit-service';
-import { getStreakData } from '@/lib/api-service/streak-service';
 import { getCachedUser } from '@/lib/utils/auth-utils';
+import AutoSyncManager from './_components/auto-sync-manager';
+import { getLastSyncDate } from '@/lib/api-service/github-service';
+import { SyncProvider } from '@/components/providers/sync-provider';
 
 interface HomePageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -23,9 +24,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     redirect('/');
   }
 
-  const [initialCommit, streakData] = await Promise.all([
+  const [initialCommit, lastSyncDate] = await Promise.all([
     getTodayCommitData(supabase, user.id),
-    getStreakData(supabase, user.id),
+    getLastSyncDate(supabase, user.id),
   ]);
 
   const finalData: TodayCommitSummary = initialCommit || {
@@ -54,27 +55,30 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       }
     >
-      <div className="min-h-screen bg-background text-white p-8">
-        {/* 모바일 */}
-        <div className="block md:hidden">
-          {isGroupView ? (
-            <GroupSection />
-          ) : (
-            <MyProfileSection user={user} initialCommit={finalData} />
-          )}
-        </div>
-
-        {/* 데스크탑 */}
-        <div className="hidden md:grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-5 space-y-6">
-            <MyProfileSection user={user} initialCommit={finalData} />
+      <SyncProvider>
+        <AutoSyncManager lastSyncDate={lastSyncDate} />
+        <div className="min-h-screen bg-background text-white p-8">
+          {/* 모바일 */}
+          <div className="block md:hidden">
+            {isGroupView ? (
+              <GroupSection />
+            ) : (
+              <MyProfileSection user={user} initialCommit={finalData} />
+            )}
           </div>
 
-          <div className="col-span-12 lg:col-span-7 space-y-6">
-            <GroupSection />
+          {/* 데스크탑 */}
+          <div className="hidden md:grid grid-cols-12 gap-6">
+            <div className="col-span-12 lg:col-span-5 space-y-6">
+              <MyProfileSection user={user} initialCommit={finalData} />
+            </div>
+
+            <div className="col-span-12 lg:col-span-7 space-y-6">
+              <GroupSection />
+            </div>
           </div>
         </div>
-      </div>
+      </SyncProvider>
     </Suspense>
   );
 }
