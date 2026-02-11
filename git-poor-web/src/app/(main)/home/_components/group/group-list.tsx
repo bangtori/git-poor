@@ -1,6 +1,10 @@
+'use client';
 import FilledButton from '@/components/ui/filled-button';
 import { Users, SquarePlus } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from 'react';
+import AddGroupModal from './add-group-modal';
+import { cn } from '@/lib/utils/tailwind-utils';
+
 const dummyData = Array.from({ length: 4 }).map((_, i) => ({
   id: i,
   title: 'Room Title',
@@ -9,16 +13,28 @@ const dummyData = Array.from({ length: 4 }).map((_, i) => ({
 }));
 
 export default function GroupListSection() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="w-full min-h-screen text-white">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold mb-4">Group</h2>
-        {/* TODO: - Add 모달 연결 */}
-        <div className="flex gap-2 items-center text-primary hover:text-primary-hover">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex gap-2 items-center text-primary hover:text-primary-hover"
+        >
           <SquarePlus size={20} />
           <span className="font-bold">Add</span>
-        </div>
+        </button>
       </div>
+      <AddGroupModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreated={() => {
+          console.log('생성 완료! 리스트를 새로고침 하세요.');
+          // 필요한 경우 여기서 추가 로직 실행
+        }}
+      />
       {/* [컨테이너 레이아웃]
         - 기본(모바일): grid grid-cols-2 (2열 카드)
         - md(데스크탑): flex flex-col (1열 리스트) 
@@ -27,11 +43,11 @@ export default function GroupListSection() {
         {dummyData.map((item) => (
           <li
             key={item.id}
-            className="
-              bg-background-card rounded-xl p-4
-              flex flex-col items-center justify-center gap-3
-              md:flex-row md:justify-between md:px-6 md:py-4
-            "
+            className={cn(
+              'bg-background-card rounded-xl p-4',
+              'flex flex-col items-center justify-center gap-3',
+              'md:flex-row md:justify-between md:px-6 md:py-4',
+            )}
           >
             <div className="flex flex-col items-center gap-2 md:flex-row md:gap-6">
               <span className="text-primary font-bold text-lg">
