@@ -3,6 +3,7 @@ import type { AuthProps } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Bell, LogOut } from 'lucide-react';
 
 export function Headers({ user }: AuthProps) {
   const supabase = createClient();
@@ -31,13 +32,20 @@ export function Headers({ user }: AuthProps) {
           </p>
         </div>
       </Link>
-
-      <button
-        onClick={handleLogout}
-        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition border border-gray-700"
-      >
-        로그아웃
-      </button>
+      <div className="flex justify-end items-center gap-2">
+        <Link
+          href="/home"
+          className="px-4 py-2 text-text-secondary hover:text-text-primary transition-transform hover:scale-110"
+        >
+          <Bell className="text-x" />
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 text-text-secondary hover:text-danger transition-transform hover:scale-110"
+        >
+          <LogOut className="text-xl" />
+        </button>
+      </div>
     </header>
   );
 }
