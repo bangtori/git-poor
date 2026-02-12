@@ -23,7 +23,7 @@ export default function GroupListSection({
         <h2 className="text-2xl font-bold mb-4">Group</h2>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex gap-2 items-center text-primary hover:text-primary-hover"
+          className="flex gap-2 items-center text-primary hover:text-primary-hover  transition-transform hover:scale-105"
         >
           <SquarePlus size={20} />
           <span className="font-bold">Add</span>
