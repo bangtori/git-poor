@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/utils/auth-utils';
-import { GroupRole } from '@/types';
+import { GroupRole, GroupSummary, GroupListResponse } from '@/types';
+import { getMyGroupsService } from '@/services/group-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -143,5 +144,90 @@ export async function POST(request: Request) {
       { error: '서버 에러가 발생했습니다.' },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * [API Specification]
+ * -----------------------------------------------------------------------------
+ * @method GET
+ * @summary 내 그룹 목록 조회 (페이지네이션 적용)
+ * @description
+ * - 현재 로그인한 사용자가 멤버로 가입된 그룹 리스트를 가져옵니다.
+ * - 쿼리 파라미터(page, limit)를 통해 페이징 처리를 지원합니다.
+ * - 요청 예시: GET /api/groups?page=1&limit=10
+ *
+ * @queryParams
+ * - page (number, optional): 페이지 번호 (Default: 1)
+ * - limit (number, optional): 한 번에 가져올 개수 (Default: 10)
+ *
+ * @response 200 (OK)
+ * - 성공 시 그룹 리스트와 페이징 정보를 반환
+ * - Type:
+ * {
+ * success: true,
+ * data: [
+ * {
+ * id: string,
+ * name: string,
+ * penalty_title: string,
+ * member_count: number,
+ * is_owner: boolean,
+ * penalty_count: number,
+ * ...
+ * },
+ * ...
+ * ],
+ * meta: {
+ * page: number,        // 현재 페이지
+ * limit: number,       // 페이지당 개수
+ * total_count: number, // 전체 그룹 수
+ * total_pages: number, // 전체 페이지 수
+ * has_next_page: boolean // 다음 페이지 존재 여부
+ * }
+ * }
+ *
+ * @response 401 (Unauthorized)
+ * - 로그인하지 않은 경우
+ * -----------------------------------------------------------------------------
+ */
+export async function GET(request: Request) {
+  try {
+    const user = await getCachedUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: '유저 정보가 존재하지 않습니다.' },
+        { status: 401 },
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const rawPage = Number(searchParams.get('page')) || 1;
+    const rawLimit = Number(searchParams.get('limit')) || 10;
+    // 범위 제한
+    const page = Math.max(1, rawPage);
+    const limit = Math.min(50, Math.max(1, rawLimit));
+
+    // supabase Range
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Group Service 호출
+    const { data, totalCount } = await getMyGroupsService(user.id, page, limit);
+
+    return NextResponse.json({
+      success: true,
+      data,
+      meta: {
+        page,
+        limit,
+        total_count: totalCount ?? 0,
+        total_pages: Math.ceil((totalCount ?? 0) / limit),
+        has_next_page: (totalCount ?? 0) > to + 1,
+      },
+    });
+  } catch (error) {
+    console.error('error: ' + error);
   }
 }

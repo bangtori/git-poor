@@ -5,17 +5,18 @@ import { useState } from 'react';
 import AddGroupModal from './add-group-modal';
 import { cn } from '@/lib/utils/tailwind-utils';
 import { useRouter } from 'next/navigation';
+import { GroupSummary } from '@/types';
 
-const dummyData = Array.from({ length: 4 }).map((_, i) => ({
-  id: i,
-  title: 'Room Title',
-  members: 3,
-  penalty: 'N회',
-}));
+interface GroupListSectionProps {
+  initialGroups: GroupSummary[];
+}
 
-export default function GroupListSection() {
+export default function GroupListSection({
+  initialGroups,
+}: GroupListSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
+  const groups = initialGroups || [];
   return (
     <div className="w-full min-h-screen text-white">
       <div className="flex justify-between items-center">
@@ -41,9 +42,9 @@ export default function GroupListSection() {
         - md(데스크탑): flex flex-col (1열 리스트) 
       */}
       <ul className="w-full grid grid-cols-2 gap-3 md:flex md:flex-col md:gap-4">
-        {dummyData.map((item) => (
+        {groups.map((group) => (
           <li
-            key={item.id}
+            key={group.id}
             className={cn(
               'bg-background-card rounded-xl p-4',
               'flex flex-col items-center justify-center gap-3',
@@ -52,15 +53,15 @@ export default function GroupListSection() {
           >
             <div className="flex flex-col items-center gap-2 md:flex-row md:gap-6">
               <span className="text-primary font-bold text-lg">
-                {item.title}
+                {group.name}
               </span>
 
               <div className="flex flex-col items-center text-gray-400 text-sm gap-1 md:flex-row md:gap-4">
                 <div className="flex items-center gap-1">
                   <Users size={18} />
-                  <span>{item.members}명</span>
+                  <span>{group.member_count}명</span>
                 </div>
-                <span>내 벌금 : {item.penalty}</span>
+                <span>내 벌금 : {group.my_penalty_count}회</span>
               </div>
             </div>
 

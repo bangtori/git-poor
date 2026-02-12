@@ -10,6 +10,7 @@ import { getCachedUser } from '@/lib/utils/auth-utils';
 import AutoSyncManager from './_components/auto-sync-manager';
 import { getLastSyncDate } from '@/lib/api-service/github-service';
 import { SyncProvider } from '@/components/providers/sync-provider';
+import { getMyGroupsService } from '@/services/group-service';
 
 interface HomePageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -17,12 +18,13 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const supabase = await createClient();
-  console.log('Page 렌더링');
-  const user = await getCachedUser();
 
+  const user = await getCachedUser();
   if (!user) {
     redirect('/');
   }
+
+  const { data: groups } = await getMyGroupsService(user.id, 1, 10);
 
   const [initialCommit, lastSyncDate] = await Promise.all([
     getTodayCommitData(supabase, user.id),
@@ -43,7 +45,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const GroupSection = () => (
     <main className="max-w-4xl mx-auto">
-      <GroupListSection />
+      <GroupListSection initialGroups={groups} />
     </main>
   );
 
