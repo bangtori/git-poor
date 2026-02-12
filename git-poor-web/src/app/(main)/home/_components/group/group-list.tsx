@@ -6,6 +6,7 @@ import AddGroupModal from './add-group-modal';
 import { cn } from '@/lib/utils/tailwind-utils';
 import { useRouter } from 'next/navigation';
 import { GroupSummary } from '@/types';
+import Link from 'next/link';
 
 interface GroupListSectionProps {
   initialGroups: GroupSummary[];
@@ -65,9 +66,11 @@ export default function GroupListSection({
               </div>
             </div>
 
-            <FilledButton className="w-full py-2 hover:bg-primary-hover md:w-auto">
-              바로가기
-            </FilledButton>
+            <Link href={`groups/${group.id}`} className="w-full md:w-auto">
+              <FilledButton className="w-full py-2 hover:bg-primary-hover">
+                바로가기
+              </FilledButton>
+            </Link>
           </li>
         ))}
       </ul>

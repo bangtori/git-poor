@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com', // ✅ 목업용 다이스베어 추가
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
