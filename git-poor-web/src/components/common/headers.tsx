@@ -41,7 +41,7 @@ export function Headers({ user }: AuthProps) {
         </Link>
         <button
           onClick={handleLogout}
-          className="px-4 py-2 text-text-secondary hover:text-danger transition-transform hover:scale-110"
+          className="px-2 py-2 text-text-secondary hover:text-danger transition-transform hover:scale-110"
         >
           <LogOut className="text-xl" />
         </button>
