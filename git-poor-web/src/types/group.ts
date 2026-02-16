@@ -33,9 +33,9 @@ export interface GroupMember {
 
 export interface GroupDetail {
   group_info: GroupInfo;
-  members: GroupMember[];
+  members: GroupMemberWithCommit[];
 }
 
 export interface GroupMemberWithCommit extends GroupMember {
-  commit_count: number;
+  today_commit_count: number;
 }

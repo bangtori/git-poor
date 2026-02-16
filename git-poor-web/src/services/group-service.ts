@@ -7,7 +7,9 @@ import {
   GroupRole,
   GroupSummary,
   getGroupRoleKey,
+  GroupMemberWithCommit
 } from '@/types';
+import { getGitPoorDate } from '@/lib/utils/date-utils';
 
 export async function getMyGroupsService(
   userId: string,
@@ -188,13 +190,48 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
   }
 }
 
-// 그룹 상세 정보 완성 (그룹 정보 + 멤버 리스트)
+export async function getGroupMembersWithTodayCommitCount(
+  groupId: string,
+): Promise<GroupMemberWithCommit[]> {
+  const supabase = await createClient();
+
+  // 기존 멤버 목록
+  const members: GroupMember[] = await getGroupMembers(groupId);
+  if (members.length === 0) return [];
+  const today = getGitPoorDate(new Date().toISOString());
+  const memberIds = members.map((m) => m.user_id);
+
+  // 오늘 커밋 조회
+  const { data: rows, error } = await supabase
+    .from('commits')
+    .select('user_id')
+    .in('user_id', memberIds)
+    .eq('commit_date', today);
+
+  if (error) {
+    console.error('[TodayCommit Fetch Error]', error);
+    return members.map((m) => ({ ...m, today_commit_count: 0 }));
+  }
+
+  // user_id별 카운트
+  const countMap = new Map<string, number>();
+  (rows ?? []).forEach((r) => {
+    countMap.set(r.user_id, (countMap.get(r.user_id) ?? 0) + 1);
+  });
+
+  return members.map((m) => ({
+    ...m,
+    today_commit_count: countMap.get(m.user_id) ?? 0,
+  }));
+}
+
+// 그룹 상세 정보 완성 (그룹 정보 + 멤버 리스트 )
 export async function getGroupDetail(
   groupId: string,
 ): Promise<GroupDetail | null> {
   const [groupInfo, members] = await Promise.all([
     getGroupInfo(groupId),
-    getGroupMembers(groupId),
+    getGroupMembersWithTodayCommitCount(groupId),
   ]);
 
   // 그룹 정보가 없으면 상세 페이지를 보여줄 수 없음

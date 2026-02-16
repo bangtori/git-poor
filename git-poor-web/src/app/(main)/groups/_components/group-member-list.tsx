@@ -26,7 +26,7 @@ export default function GroupMemberList({ members }: GroupMemberListProps) {
             key={member.user_id}
             className={cn(
               'w-full max-w-[280px] gap-4 aspect-square flex flex-col items-center justify-between p-6 rounded-3xl bg-background-card border-2 transition-transform hover:scale-105',
-              member.commit_count === 0 ? 'border-danger' : 'border-primary',
+              member.today_commit_count === 0 ? 'border-danger' : 'border-primary',
             )}
           >
             {/* 유저 정보 */}
@@ -57,7 +57,7 @@ export default function GroupMemberList({ members }: GroupMemberListProps) {
                 </span>
               </div>
               <div className="flex items-center text-primary gap-1">
-                {member.commit_count === 0 ? (
+                {member.today_commit_count === 0 ? (
                   <CalendarX2 className="text-lg text-text-secondary" />
                 ) : (
                   <CalendarCheck2 className="text-sm md:text-xl" />
@@ -65,12 +65,12 @@ export default function GroupMemberList({ members }: GroupMemberListProps) {
                 <span
                   className={cn(
                     'text-sm md:text-xl font-bold',
-                    member.commit_count === 0
+                    member.today_commit_count === 0
                       ? 'text-text-secondary'
                       : 'text-primary',
                   )}
                 >
-                  {member.commit_count}
+                  {member.today_commit_count}
                 </span>
               </div>
             </div>
