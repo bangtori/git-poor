@@ -33,7 +33,7 @@ export default function GroupListSection({
       <AddGroupModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreated={() => {
+        onSuccess={() => {
           console.log('생성 완료! 서버 데이터 다시 불러오는 중...');
           router.refresh();
         }}

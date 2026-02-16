@@ -1,10 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { getCachedUser } from '@/lib/utils/auth-utils';
-import { getGroupDetail } from '@/services/group-service';
+import { getGroupDetail, getGroupRole } from '@/services/group-service';
 import GroupHeader from '../_components/group-header';
 import GroupMemberList from '../_components/group-member-list';
-import { GroupMemberWithCommit } from '@/types';
+import { GroupMemberWithCommit, GroupRole } from '@/types';
 
 interface GroupDetailPageProps {
   params: { id: string };
@@ -13,14 +12,21 @@ export default async function GroupDetailPage({
   params,
 }: GroupDetailPageProps) {
   const { id } = await params;
+  const user = await getCachedUser();
 
-  const groupDetail = await getGroupDetail(id);
+  if (!user) return notFound();
 
-  if (!groupDetail) {
+  const [groupDetail, userRole] = await Promise.all([
+    getGroupDetail(id),
+    getGroupRole(id, user.id),
+  ]);
+
+  if (!groupDetail || !userRole) {
     return notFound();
   }
 
   const { group_info, members } = groupDetail;
+  const isOwner = userRole === GroupRole.OWNER;
 
   const mockMembers: GroupMemberWithCommit[] = Array.from({ length: 12 }).map(
     (_, i) => ({
@@ -46,7 +52,11 @@ export default async function GroupDetailPage({
   ];
   return (
     <main className="flex flex-col gap-3 w-full px-6 py-5">
-      <GroupHeader title={group_info.name} penalty={group_info.penalty_title} />
+      <GroupHeader
+        title={group_info.name}
+        penalty={group_info.penalty_title}
+        isOwner={isOwner}
+      />
       <GroupMemberList members={displayMembers} />
     </main>
   );

@@ -5,14 +5,9 @@ import { useRouter } from 'next/navigation';
 import Modal from '@/components/ui/modal';
 import FilledButton from '@/components/ui/filled-button';
 import { Check, Square } from 'lucide-react';
+import { ModalActionProps } from '@/types/modal';
 import { cn } from '@/lib/utils/tailwind-utils';
 
-interface AddGroupModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  /** 그룹 생성 성공 시 부모에게 알리기 위한 콜백 (예: 목록 새로고침) */
-  onCreated?: () => void;
-}
 const RECOMMENDED_PENALTIES = [
   '벌금 1,000원',
   '커피 1잔 보내기',
@@ -22,8 +17,8 @@ const RECOMMENDED_PENALTIES = [
 export default function AddGroupModal({
   onClose,
   isOpen,
-  onCreated,
-}: AddGroupModalProps) {
+  onSuccess: onCreated,
+}: ModalActionProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 

@@ -1,6 +1,13 @@
 // src/services/group-service.ts
 import { createClient } from '@/lib/supabase/server';
-import { GroupDetail, GroupInfo, GroupMember, GroupSummary } from '@/types';
+import {
+  GroupDetail,
+  GroupInfo,
+  GroupMember,
+  GroupRole,
+  GroupSummary,
+  getGroupRoleKey,
+} from '@/types';
 
 export async function getMyGroupsService(
   userId: string,
@@ -200,4 +207,31 @@ export async function getGroupDetail(
     group_info: groupInfo,
     members: members,
   };
+}
+
+// 요청 유저 그룹 내 role 반환
+export async function getGroupRole(
+  groupId: string,
+  user_id: string,
+): Promise<GroupRole | null> {
+  const supabase = await createClient();
+
+  try {
+    const { data, error } = await supabase
+      .from('group_members')
+      .select('role')
+      .eq('group_id', groupId)
+      .eq('user_id', user_id)
+      .single();
+
+    if (error || !data) {
+      console.error('[GroupMembers Fetch Error]', error);
+      return null;
+    }
+
+    return getGroupRoleKey(data.role) || null;
+  } catch (error) {
+    console.error('[GroupMembers Exception]', error);
+    return null;
+  }
 }
