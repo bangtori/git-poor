@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/utils/auth-utils';
 import { CommitDetail } from '@/types/commit';
+import { ok, fail, unauthorized } from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -21,73 +22,42 @@ import { CommitDetail } from '@/types/commit';
  * - 성공적으로 데이터를 반환함.
  * - Type: {@link CommitDetail}[]
  *
- * @response 400 (Bad Request)
- * - 필수 파라미터(date)가 누락되었을 때 발생.
- *
- * @response 401 (Unauthorized)
- * - 로그인하지 않은 사용자가 요청했을 때 발생.
- *
- * @response 500 (Internal Server Error)
- * - DB 연결 실패 또는 쿼리 에러 발생 시.
- * -----------------------------------------------------------------------------
+ * @queryParams
+ * - date (string, required): 조회할 날짜 (YYYY-MM-DD)
  */
-
 export async function GET(request: Request) {
   try {
-    // 쿼리 파라미터 파싱
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return unauthorized('Unauthorized');
+    }
+
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
 
-    //[Validation] 필수 파라미터 체크
     if (!date) {
-      return NextResponse.json(
-        { error: '날짜를 필수로 지정해주세요.' },
-        { status: 400 },
-      );
+      return fail('날짜 파라미터가 필요합니다.', 400);
     }
 
-    // Supabase 연결
-    const user = await getCachedUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: '유저 정보가 존재하지 않습니다.' },
-        { status: 401 },
-      );
-    }
-
-    // DB 조회하기
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const { data: commits, error } = await supabase
       .from('commits')
-      .select(
-        `
-        id,
-        repo_name,
-        commit_sha,
-        commit_url,
-        total_changes,
-        additions,
-        deletions,
-        languages,
-        committed_at,
-        commit_date
-      `,
-      )
+      .select('*')
       .eq('user_id', user.id)
       .eq('commit_date', date)
       .order('committed_at', { ascending: false });
 
     if (error) {
       console.error('지정 날짜 커밋 데이터 불러오기 에러' + error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return fail('DB Error');
     }
 
-    return NextResponse.json<CommitDetail[]>(data || []);
+    return ok(commits);
   } catch (error) {
     console.error('[Server Error] 특정 날짜 커밋 가져오기 API Error: ' + error);
-    return NextResponse.json(
-      { error: '서버 에러가 발생했습니다.' },
-      { status: 500 },
-    );
+    return fail('서버 에러가 발생했습니다.');
   }
 }

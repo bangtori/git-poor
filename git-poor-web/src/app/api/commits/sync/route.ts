@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { Octokit } from 'octokit';
 import { createClient } from '@/lib/supabase/server';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
@@ -9,6 +8,7 @@ import {
 } from '@/lib/api-service/streak-service';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { refreshGitHubToken } from '@/lib/api-service/auth-service';
+import { ok, unauthorized, badRequest, fail, serverError } from '@/lib/http/reponse-service';
 
 // ---------------------------------------------------------
 // 메인 로직 (POST)
@@ -21,11 +21,9 @@ export async function POST() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
+    
     if (!session) {
-      return NextResponse.json(
-        { error: '인증 정보가 없습니다.' },
-        { status: 401 },
-      );
+      return unauthorized('인증 정보가 없습니다.');
     }
 
     const user = session.user;
@@ -71,10 +69,7 @@ export async function POST() {
     }
 
     if (!currentToken) {
-      return NextResponse.json(
-        { error: 'GitHub 연결 정보가 만료되었습니다. 다시 로그인해주세요.' },
-        { status: 401 },
-      );
+      return unauthorized('GitHub 연결 정보가 만료되었습니다. 다시 로그인해주세요.');
     }
 
     const token = session.provider_token;
@@ -82,10 +77,7 @@ export async function POST() {
     const targetUsername = user.user_metadata.user_name;
 
     if (!targetUsername) {
-      return NextResponse.json(
-        { error: 'GitHub 계정 정보를 찾을 수 없습니다. (Username Missing)' },
-        { status: 400 },
-      );
+      return badRequest('GitHub 계정 정보를 찾을 수 없습니다. (Username Missing)');
     }
     // ------------ User 정보 초기화 로직 끝 ------------------
 
@@ -114,8 +106,7 @@ export async function POST() {
       // 커밋이 없어도 현재 스트릭 정보는 가져와서 반환함
       const currentStreak = await getStreakData(adminSupabase, user.id);
 
-      return NextResponse.json({
-        success: true,
+      return ok({
         message: '오늘의 커밋이 없습니다.',
         data: {
           date: todayTarget,
@@ -296,8 +287,7 @@ export async function POST() {
       { changes: 0, langs: new Set<string>() },
     );
 
-    return NextResponse.json({
-      success: true,
+    return ok({
       message:
         commitsToInsert.length > 0
           ? '신규 커밋 업데이트 완료'
@@ -316,6 +306,6 @@ export async function POST() {
     });
   } catch (error: any) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return fail('서버 에러가 발생했습니다.');
   }
 }

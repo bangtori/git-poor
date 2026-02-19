@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/utils/auth-utils';
-import { Invitation, InviteState, GroupRole } from '@/types';
+import { GroupRole } from '@/types';
 import { sendInvitation, getInvitationByUserId } from '@/services/invitation-service';
 import { getGroupRole } from '@/services/group-service';
+import { ok, created, badRequest, unauthorized, forbidden, serverError, fail } from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -46,30 +45,21 @@ export async function POST(request: Request) {
   try {
     const user = await getCachedUser();
     if (!user) {
-      return NextResponse.json(
-        { error: '로그인이 필요합니다.' },
-        { status: 401 },
-      );
+      return unauthorized('로그인이 필요합니다.');
     }
 
     const body = await request.json();
     const { group_id, email } = body;
 
     if (!group_id || !email) {
-      return NextResponse.json(
-        { error: 'group_id와 email은 필수입니다.' },
-        { status: 400 },
-      );
+      return badRequest('group_id와 email은 필수입니다.');
     }
 
     // TODO: 그룹 id와 email 유효성확인
 
     const role = await getGroupRole(group_id, user.id);
     if (role !== GroupRole.OWNER && role !== GroupRole.ADMIN) {
-      return NextResponse.json(
-        { error: '권한이 없습니다.' },
-        { status: 403 },
-      );
+      return forbidden('권한이 없습니다.');
     }
 
     // TODO: 초대 중복 체크 로직
@@ -77,23 +67,14 @@ export async function POST(request: Request) {
     const result = await sendInvitation(email, group_id);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error?.message || '초대 전송 실패' },
-        { status: 500 },
-      );
+      return fail(result.error?.message || '초대 전송 실패');
     }
 
-    return NextResponse.json(
-      { success: true, data: result.data },
-      { status: 201 },
-    );
+    return created(result.data);
 
   } catch (error) {
     console.error('[Invitation POST Error]', error);
-    return NextResponse.json(
-      { error: '서버 에러가 발생했습니다.' },
-      { status: 500 },
-    );
+    return serverError();
   }
 }
 
@@ -123,31 +104,19 @@ export async function GET() {
   try {
     const user = await getCachedUser();
     if (!user) {
-      return NextResponse.json(
-        { error: '로그인이 필요합니다.' },
-        { status: 401 },
-      );
+      return unauthorized();
     }
 
     const { success, data, error } = await getInvitationByUserId(user.id);
 
     if (!success) {
-      return NextResponse.json(
-        { error: error?.message || '초대 목록 조회 실패' },
-        { status: 500 },
-      );
+      return fail(error?.message || '초대 목록 조회 실패');
     }
 
-    return NextResponse.json(
-      { success: true, data },
-      { status: 200 },
-    );
+    return ok(data);
 
   } catch (error) {
     console.error('[Invitation GET Error]', error);
-    return NextResponse.json(
-      { error: '서버 에러가 발생했습니다.' },
-      { status: 500 },
-    );
+    return serverError();
   }
 }

@@ -1,6 +1,5 @@
-import { getCachedUser } from '@/lib/utils/auth-utils';
-import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { ok, fail, serverError, unauthorized, badRequest } from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -26,88 +25,66 @@ import { createClient } from '@/lib/supabase/server';
  * ...
  * }
  *
- * @response 400 (Bad Request)
- * - 필수 파라미터(from, to)가 누락되었을 때 발생.
- *
- * @response 401 (Unauthorized)
- * - 로그인하지 않은 사용자가 요청했을 때 발생.
- *
- * @response 500 (Internal Server Error)
- * - DB 연결 실패 또는 쿼리 에러 발생 시.
- * -----------------------------------------------------------------------------
+ * - 시작 날짜(from)와 종료 날짜(to) 사이의 일별 커밋 통계를 반환합니다.
+ * @queryParams
+ * - from (string, required): 조회 시작 날짜 (YYYY-MM-DD)
+ * - to (string, required): 조회 종료 날짜 (YYYY-MM-DD)
  */
 export async function GET(request: Request) {
   try {
-    // 쿼리 파라미터 파싱
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return unauthorized();
+    }
+
     const { searchParams } = new URL(request.url);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
 
-    //[Validation] 필수 파라미터 체크
+    // 쿼리 파라미터가 없으면 에러 혹은 기본 로직 처리 (여기서는 심플하게)
     if (!from || !to) {
-      return NextResponse.json(
-        { error: '날짜 범위(from, to)가 필요합니다.' },
-        { status: 400 },
-      );
+      return badRequest('날짜 범위가 필요합니다.');
     }
 
-    // Supabase 연결
-    const user = await getCachedUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: '유저 정보가 존재하지 않습니다.' },
-        { status: 401 },
-      );
-    }
-
-    // DB 조회하기
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+    // --- (1) 날짜 범위에 해당하는 커밋들 가져오기 ---
+    const { data: commits, error } = await supabase
       .from('commits')
       .select('commit_date, total_changes')
-      .eq('user_id', user.id) // 가져온 user의 ID 사용
+      .eq('user_id', user.id)
       .gte('commit_date', from)
-      .lte('commit_date', to)
-      .order('commit_date', { ascending: true });
+      .lte('commit_date', to);
 
     if (error) {
-      console.log('커밋 데이터 불러오기 에러' + error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error(error);
+      return fail('커밋 데이터를 불러오는데 실패했습니다.');
     }
 
-    // 데이터 가공 -> 같은 날짜 통합
-    const dailyStats = data.reduce(
-      (acc, curr) => {
-        const dateKey = curr.commit_date;
+    // --- (2) 날짜별로 그루핑 (Map or Object) ---
+    // 결과 형태: { "2024-02-01": { count: 3, total_changes: 150 }, ... }
+    const historyMap: Record<
+      string,
+      { commit_date: string; commit_count: number; total_changes: number }
+    > = {};
 
-        if (!acc[dateKey]) {
-          // 해당 날짜의 첫 데이터면 초기화
-          acc[dateKey] = {
-            commit_date: dateKey,
-            commit_count: 0,
-            total_changes: 0,
-          };
-        }
+    commits?.forEach((c) => {
+      const dateKey = c.commit_date;
+      if (!historyMap[dateKey]) {
+        historyMap[dateKey] = {
+          commit_date: dateKey,
+          commit_count: 0,
+          total_changes: 0,
+        };
+      }
+      historyMap[dateKey].commit_count += 1;
+      historyMap[dateKey].total_changes += c.total_changes;
+    });
 
-        // 누적 계산
-        acc[dateKey].commit_count += 1; // 커밋 개수 +1
-        acc[dateKey].total_changes += curr.total_changes || 0; // 변경량 합산
-
-        return acc;
-      },
-      {} as Record<
-        string,
-        { commit_date: string; commit_count: number; total_changes: number }
-      >,
-    );
-
-    return NextResponse.json(dailyStats);
+    return ok(historyMap);
   } catch (error) {
-    console.error('error: ' + error);
-    return NextResponse.json(
-      { error: '서버 에러가 발생했습니다.' },
-      { status: 500 },
-    );
+    return serverError();
   }
 }

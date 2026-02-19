@@ -32,7 +32,8 @@ export default function HistoryPage() {
           throw new Error('Failed to fetch');
         }
 
-        const data: CommitDetail[] = await res.json();
+        const responseData = await res.json();
+        const data: CommitDetail[] = responseData.data;
 
         setSelectedState({
           date,

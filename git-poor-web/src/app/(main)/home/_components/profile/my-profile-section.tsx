@@ -72,11 +72,11 @@ export default function MyProfileSection({
     setIsSyncing(true);
     try {
       const response = await fetch('/api/commits/sync', { method: 'POST' });
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.success) {
+      if (result.success) {
         // 성공 시 상태 업데이트 -> UserProfileCard와 TodayCommitCard가 동시에 바뀜!
-        setCommitSummary(data.data);
+        setCommitSummary(result.data.data);
       }
     } catch (error) {
       alert('동기화 중 오류가 발생했습니다.');

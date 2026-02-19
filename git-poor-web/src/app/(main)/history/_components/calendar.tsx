@@ -59,8 +59,8 @@ export default function HistoryCalendar({
         );
         if (!res.ok) throw new Error('Failed to fetch');
 
-        const data = await res.json();
-        setHistoryMap(data); // 데이터 저장
+        const responseData = await res.json();
+        setHistoryMap(responseData.data); // 데이터 저장
       } catch (error) {
         console.error('커밋 히스토리 로딩 실패:', error);
       }

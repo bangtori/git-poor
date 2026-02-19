@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/utils/auth-utils';
-import { GroupRole, GroupSummary, GroupListResponse } from '@/types';
+import { GroupRole } from '@/types';
 import { getMyGroupsService } from '@/services/group-service';
+import { ok, created, badRequest, unauthorized, fail, serverError } from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -59,34 +59,22 @@ export async function POST(request: Request) {
     const user = await getCachedUser();
 
     if (!user) {
-      return NextResponse.json(
-        { error: '인증 정보가 없습니다.' },
-        { status: 401 },
-      );
+      return unauthorized('인증 정보가 없습니다.');
     }
 
     if (!name?.trim()) {
-      return NextResponse.json(
-        { error: '그룹 이름은 필수입니다.' },
-        { status: 400 },
-      );
+      return badRequest('그룹 이름은 필수입니다.');
     }
 
     if (!penalty_title?.trim()) {
-      return NextResponse.json(
-        { error: '벌칙 내용은 필수입니다.' },
-        { status: 400 },
-      );
+      return badRequest('벌칙 내용은 필수입니다.');
     }
 
     if (
       typeof day_start_hour === 'number' &&
       (day_start_hour < 0 || day_start_hour > 23)
     ) {
-      return NextResponse.json(
-        { error: '시작 시간은 0시부터 23시 사이여야 합니다.' },
-        { status: 400 },
-      );
+      return badRequest('시작 시간은 0시부터 23시 사이여야 합니다.');
     }
 
     // 데이터 저장
@@ -108,10 +96,7 @@ export async function POST(request: Request) {
 
     if (addGroupError) {
       console.log('그룹 생성 에러' + addGroupError.message);
-      return NextResponse.json(
-        { error: '그룹 생성하는데 문제가 발생했습니다.' },
-        { status: 500 },
-      );
+      return fail('그룹 생성하는데 문제가 발생했습니다.');
     }
 
     const { error: addGroupMemberError } = await supabase
@@ -125,25 +110,13 @@ export async function POST(request: Request) {
       console.log('그룹 멤버 테이블 추가 에러' + addGroupMemberError.message);
       // 롤백: 방금 만든 그룹 삭제
       await supabase.from('groups').delete().eq('id', groupData.id);
-      return NextResponse.json(
-        { error: '그룹 생성하는데 문제가 발생했습니다.' },
-        { status: 500 },
-      );
+      return fail('그룹 생성하는데 문제가 발생했습니다.');
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: groupData,
-      },
-      { status: 201 },
-    );
+    return created(groupData);
   } catch (error) {
     console.error('error: ' + error);
-    return NextResponse.json(
-      { error: '서버 에러가 발생했습니다.' },
-      { status: 500 },
-    );
+    return serverError();
   }
 }
 
@@ -196,10 +169,7 @@ export async function GET(request: Request) {
   try {
     const user = await getCachedUser();
     if (!user) {
-      return NextResponse.json(
-        { error: '유저 정보가 존재하지 않습니다.' },
-        { status: 401 },
-      );
+      return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
@@ -216,8 +186,7 @@ export async function GET(request: Request) {
     // Group Service 호출
     const { data, totalCount } = await getMyGroupsService(user.id, page, limit);
 
-    return NextResponse.json({
-      success: true,
+    return ok({
       data,
       meta: {
         page,
@@ -229,5 +198,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('error: ' + error);
+    return serverError();
   }
 }
