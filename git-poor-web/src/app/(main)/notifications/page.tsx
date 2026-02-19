@@ -35,6 +35,26 @@ export default async function NotificationPage() {
         penalty_title: '안일어나면 10000원',
       },
     },
+    {
+      id: '3', 
+      group_id: 'group-3',
+      invitee_id: user.id,
+      state: InviteState.REJECTED,
+      groups: {
+        name: '모닝 루틴2',
+        penalty_title: '안일어나면 10000원',
+      },
+    },
+    {
+      id: '4', 
+      group_id: 'group-4',
+      invitee_id: user.id,
+      state: InviteState.ACCEPTED,
+      groups: {
+        name: '모닝 루틴3',
+        penalty_title: '안일어나면 10000원',
+      },
+    },
   ];
 
   return (
@@ -47,7 +67,7 @@ export default async function NotificationPage() {
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
-          {invitations.map((invitation) => (
+          {invitations.filter((invitation) => invitation.state === InviteState.PENDING).map((invitation) => (
             <li key={invitation.id}>
               <DefaultCard title="">
                 <div className="flex flex-col gap-2 justify-start md:flex-row md:justify-between md:items-center w-full">
