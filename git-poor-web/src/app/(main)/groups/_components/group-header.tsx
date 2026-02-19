@@ -7,11 +7,13 @@ interface GroupHeaderProps {
   title: string;
   penalty: string;
   isOwner: boolean;
+  groupId: string;
 }
 export default function GroupHeader({
   title,
   penalty,
   isOwner,
+  groupId,
 }: GroupHeaderProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -40,6 +42,7 @@ export default function GroupHeader({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => console.log('멤버 초대 성공')}
+        groupId={groupId}
       />
     </>
   );

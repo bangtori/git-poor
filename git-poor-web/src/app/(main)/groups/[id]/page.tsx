@@ -34,6 +34,7 @@ export default async function GroupDetailPage({
         title={group_info.name}
         penalty={group_info.penalty_title}
         isOwner={isOwner}
+        groupId={id}
       />
       <GroupMemberList members={members} />
     </main>

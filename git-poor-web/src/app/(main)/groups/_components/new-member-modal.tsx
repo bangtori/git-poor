@@ -5,11 +5,16 @@ import FilledButton from "@/components/ui/filled-button";
 import Modal from "@/components/ui/modal";
 import { ModalActionProps } from '@/types/modal';
 
+interface NewMemberModalProps extends ModalActionProps {
+  groupId: string;
+}
+
 export default function NewMemberModal({
   isOpen,
   onClose,
   onSuccess,
-}: ModalActionProps) {
+  groupId,
+}: NewMemberModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchedEmail, setSearchedEmail] = useState('');
   const [isValidEmail, setIsValidEmail] = useState(true);
@@ -31,17 +36,33 @@ export default function NewMemberModal({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidEmail || !searchedEmail) return;
 
     setIsLoading(true);
-    // TODO: Implement add member logic
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: searchedEmail, group_id: groupId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '초대 실패');
+      }
+
+      alert('초대가 완료되었습니다.');
       onSuccess?.();
       onClose();
-    }, 1000);
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || '초대 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -34,7 +34,7 @@ export function Headers({ user }: AuthProps) {
       </Link>
       <div className="flex justify-end items-center gap-2">
         <Link
-          href="/home"
+          href="/notifications"
           className="px-4 py-2 text-text-secondary hover:text-text-primary transition-transform hover:scale-110"
         >
           <Bell className="text-x" />
