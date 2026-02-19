@@ -1,6 +1,6 @@
 import { getCachedUser } from '@/lib/utils/auth-utils';
 import { getInvitationByUserId } from '@/services/invitation-service';
-import DefaultCard from '@/components/ui/default-card';
+import InvitationItem from './_components/invitation-item';
 import { InvitationWithGroup, InviteState } from '@/types';
 import { redirect } from 'next/navigation';
 
@@ -11,51 +11,8 @@ export default async function NotificationPage() {
     redirect('/login');
   }
 
-  // const { success, data } = await getInvitationByUserId(user.id);
-  // const invitations: InvitationWithGroup[] = (success && data) ? data : [];
-
-  const invitations: InvitationWithGroup[] = [
-    {
-      id: '1',
-      group_id: 'group-1',
-      invitee_id: user.id,
-      state: InviteState.PENDING,
-      groups: {
-        name: '알고리즘 스터디',
-        penalty_title: '지각비 5000원',
-      },
-    },
-    {
-      id: '2', 
-      group_id: 'group-2',
-      invitee_id: user.id,
-      state: InviteState.PENDING,
-      groups: {
-        name: '모닝 루틴',
-        penalty_title: '안일어나면 10000원',
-      },
-    },
-    {
-      id: '3', 
-      group_id: 'group-3',
-      invitee_id: user.id,
-      state: InviteState.REJECTED,
-      groups: {
-        name: '모닝 루틴2',
-        penalty_title: '안일어나면 10000원',
-      },
-    },
-    {
-      id: '4', 
-      group_id: 'group-4',
-      invitee_id: user.id,
-      state: InviteState.ACCEPTED,
-      groups: {
-        name: '모닝 루틴3',
-        penalty_title: '안일어나면 10000원',
-      },
-    },
-  ];
+  const { success, data } = await getInvitationByUserId(user.id);
+  const invitations: InvitationWithGroup[] = (success && data) ? data : [];
 
   return (
     <div className="w-full p-6 flex flex-col gap-4">
@@ -67,34 +24,11 @@ export default async function NotificationPage() {
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
-          {invitations.filter((invitation) => invitation.state === InviteState.PENDING).map((invitation) => (
-            <li key={invitation.id}>
-              <DefaultCard title="">
-                <div className="flex flex-col gap-2 justify-start md:flex-row md:justify-between md:items-center w-full">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm text-primary font-bold">
-                      Group Invite
-                    </span>
-                    <h3 className="text-lg font-semibold text-text-primary">
-                      {invitation.groups.name}
-                    </h3>
-                    <p className="text-sm text-text-secondary">
-                      Penalty: <span className="text-danger">{invitation.groups.penalty_title}</span>
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    {/* TODO: Implement Accept/Reject buttons */}
-                    <button className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition-colors text-sm">
-                      수락
-                    </button>
-                    <button className="px-4 py-2 bg-background-secondary text-text-primary border border-border rounded hover:bg-border transition-colors text-sm">
-                      거절
-                    </button>
-                  </div>
-                </div>
-              </DefaultCard>
-            </li>
-          ))}
+          {invitations
+            .filter((invitation) => invitation.state === InviteState.PENDING)
+            .map((invitation) => (
+              <InvitationItem key={invitation.id} invitation={invitation} />
+            ))}
         </ul>
       )}
     </div>

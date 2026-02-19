@@ -40,9 +40,10 @@ export async function sendInvitation(email: string, groupId: string) {
   return { success: true, data: data as Invitation };
 }
 
+// 내 초대 목록 가져오기
 export async function getInvitationByUserId(userId: string) {
     const supabase = await createClient();
-
+    
     const { data, error } = await supabase
         .from('group_invitations')
         .select(`
@@ -60,4 +61,53 @@ export async function getInvitationByUserId(userId: string) {
     }
 
     return { success: true, data: data as InvitationWithGroup[] };
+}
+
+// 초대 수락 & 거절
+export async function updateInvitationStatus(invitationId: string, status: InviteState) {
+    const supabase = await createClient();
+
+    // 초대 정보 조회 (group_id, invitee_id 필요)
+    const { data: invitation, error: fetchError } = await supabase
+        .from('group_invitations')
+        .select('*')
+        .eq('id', invitationId)
+        .single();
+
+    if (fetchError || !invitation) {
+        console.log('[Invitation Fetch Error]', fetchError);
+        return { success: false, error: fetchError };
+    }
+
+    // 수락인 경우 그룹 멤버 추가
+    if (status === InviteState.ACCEPTED) {
+        const { error: memberError } = await supabase
+            .from('group_members')
+            .insert({
+                group_id: invitation.group_id,
+                user_id: invitation.invitee_id,
+                role: 'member', // 기본 역할
+            });
+
+        if (memberError) {
+            console.log('[Group Member Insert Error]', memberError);
+            return { success: false, error: memberError };
+        }
+    }
+    
+    // 초대 상태 업데이트
+    const { data, error } = await supabase
+        .from('group_invitations')
+        .update({ state: status })
+        .eq('id', invitationId)
+        .select()
+        .single();
+
+    if (error) {
+        console.log('[Update Invitation Error] ', error.message, error.details);
+        return { success: false, error };
+    }
+
+
+    return { success: true, data: data as Invitation };
 }
