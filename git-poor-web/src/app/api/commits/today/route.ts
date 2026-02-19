@@ -1,7 +1,7 @@
 // src/app/api/commits/today/route.ts
-import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getTodayCommitData } from '@/lib/api-service/commit-service';
+import { ok, unauthorized, serverError } from '@/lib/http/reponse-service';
 
 export async function GET() {
   try {
@@ -11,19 +11,16 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return unauthorized();
     }
 
     // 서비스 호출
     const data = await getTodayCommitData(supabase, user.id);
 
     // 결과 반환
-    return NextResponse.json(data);
+    return ok(data);
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    );
+    return serverError();
   }
 }

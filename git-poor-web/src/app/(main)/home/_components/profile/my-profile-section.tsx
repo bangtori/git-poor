@@ -5,8 +5,11 @@ import { User } from '@supabase/supabase-js';
 import { UserProfileCard } from './user-profile-card';
 import { StreakBadge } from './streak_badge';
 import TodayCommitCard from './today-commit-card';
-import { Streak, TodayCommitSummary } from '@/types';
+import { TodayCommitSummary } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import { useSync } from '@/components/providers/sync-provider';
+import { ApiResponse } from '@/lib/http/reponse';
+import { SyncResponse } from '@/types';
 
 interface MyProfileSectionProps {
   user: User;
@@ -19,7 +22,11 @@ export default function MyProfileSection({
 }: MyProfileSectionProps) {
   const [commitSummary, setCommitSummary] =
     useState<TodayCommitSummary>(initialCommit);
-  const [isLoading, setIsLoading] = useState(false);
+  const { isSyncing, setIsSyncing } = useSync();
+
+  useEffect(() => {
+    setCommitSummary(initialCommit);
+  }, [initialCommit]);
 
   useEffect(() => {
     const syncToken = async () => {
@@ -62,19 +69,23 @@ export default function MyProfileSection({
   }, [user.id]);
 
   const handleSync = async () => {
-    setIsLoading(true);
+    if (isSyncing) return;
+
+    setIsSyncing(true);
     try {
       const response = await fetch('/api/commits/sync', { method: 'POST' });
-      const data = await response.json();
+      const result: ApiResponse<SyncResponse> = await response.json();
 
-      if (data.success) {
+      if (result.success) {
         // 성공 시 상태 업데이트 -> UserProfileCard와 TodayCommitCard가 동시에 바뀜!
-        setCommitSummary(data.data);
+        setCommitSummary(result.data.data);
+      } else {
+         alert(result.error.message);
       }
     } catch (error) {
       alert('동기화 중 오류가 발생했습니다.');
     } finally {
-      setIsLoading(false);
+      setIsSyncing(false);
     }
   };
 
@@ -90,7 +101,7 @@ export default function MyProfileSection({
 
       <TodayCommitCard
         commit={commitSummary}
-        isLoading={isLoading}
+        isLoading={isSyncing}
         onRefresh={handleSync}
         currentFine={0}
       />

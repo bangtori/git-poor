@@ -5,6 +5,8 @@ import { isToday, addMonths, subMonths } from 'date-fns';
 import { getCalendarDate, getGrassClass } from '@/lib/utils/calendar-utils'; // 작성하신 유틸 함수 경로
 import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
+import { ApiResponse } from '@/lib/http/reponse';
+
 // 요일 헤더 값
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
@@ -57,10 +59,19 @@ export default function HistoryCalendar({
         const res = await fetch(
           `/api/commits/history?from=${fromDate}&to=${toDate}`,
         );
+
+// ...
+
         if (!res.ok) throw new Error('Failed to fetch');
 
-        const data = await res.json();
-        setHistoryMap(data); // 데이터 저장
+        const response: ApiResponse<Record<string, DailyStat>> =
+          await res.json();
+        
+        if (response.success) {
+            setHistoryMap(response.data);
+        } else {
+            console.error(response.error.message);
+        }
       } catch (error) {
         console.error('커밋 히스토리 로딩 실패:', error);
       }
