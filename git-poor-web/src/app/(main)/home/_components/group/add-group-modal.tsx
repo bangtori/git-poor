@@ -7,6 +7,7 @@ import FilledButton from '@/components/ui/filled-button';
 import { Check, Square } from 'lucide-react';
 import { ModalActionProps } from '@/types/modal';
 import { cn } from '@/lib/utils/tailwind-utils';
+import { ApiResponse } from '@/lib/http/reponse';
 
 const RECOMMENDED_PENALTIES = [
   '벌금 1,000원',
@@ -66,7 +67,9 @@ export default function AddGroupModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error('그룹 생성에 실패했습니다.');
+      const result: ApiResponse<any> = await response.json();
+
+      if (!result.success) throw new Error(result.error.message);
 
       setFormData({
         name: '',

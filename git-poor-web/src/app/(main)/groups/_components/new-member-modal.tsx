@@ -4,6 +4,8 @@ import { useState } from 'react';
 import FilledButton from "@/components/ui/filled-button";
 import Modal from "@/components/ui/modal";
 import { ModalActionProps } from '@/types/modal';
+import { ApiResponse } from '@/lib/http/reponse';
+import { Invitation } from '@/types';
 
 interface NewMemberModalProps extends ModalActionProps {
   groupId: string;
@@ -48,10 +50,10 @@ export default function NewMemberModal({
         body: JSON.stringify({ email: searchedEmail, group_id: groupId }),
       });
 
-      const result = await response.json();
+      const result: ApiResponse<Invitation> = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || '초대 실패');
+      if (!result.success) {
+        throw new Error(result.error.message);
       }
 
       alert('초대가 완료되었습니다.');

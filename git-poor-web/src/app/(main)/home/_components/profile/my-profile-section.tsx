@@ -8,6 +8,8 @@ import TodayCommitCard from './today-commit-card';
 import { TodayCommitSummary } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { useSync } from '@/components/providers/sync-provider';
+import { ApiResponse } from '@/lib/http/reponse';
+import { SyncResponse } from '@/types';
 
 interface MyProfileSectionProps {
   user: User;
@@ -72,11 +74,13 @@ export default function MyProfileSection({
     setIsSyncing(true);
     try {
       const response = await fetch('/api/commits/sync', { method: 'POST' });
-      const result = await response.json();
+      const result: ApiResponse<SyncResponse> = await response.json();
 
       if (result.success) {
         // 성공 시 상태 업데이트 -> UserProfileCard와 TodayCommitCard가 동시에 바뀜!
         setCommitSummary(result.data.data);
+      } else {
+         alert(result.error.message);
       }
     } catch (error) {
       alert('동기화 중 오류가 발생했습니다.');

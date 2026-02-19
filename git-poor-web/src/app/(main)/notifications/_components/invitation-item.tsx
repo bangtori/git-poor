@@ -1,9 +1,10 @@
 'use client';
 
 import DefaultCard from '@/components/ui/default-card';
-import { InvitationWithGroup, InviteState } from '@/types';
+import { InvitationWithGroup, InviteState, Invitation } from '@/types';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ApiResponse } from '@/lib/http/reponse';
 
 interface InvitationItemProps {
   invitation: InvitationWithGroup;
@@ -16,7 +17,6 @@ export default function InvitationItem({ invitation }: InvitationItemProps) {
   const handleResponse = async (state: InviteState) => {
     if (isLoading) return;
     setIsLoading(true);
-
     try {
       const response = await fetch(`/api/invitations/${invitation.id}/respond`, {
         method: 'PATCH',
@@ -26,14 +26,14 @@ export default function InvitationItem({ invitation }: InvitationItemProps) {
         body: JSON.stringify({ state }),
       });
 
-      const result = await response.json();
+      const result: ApiResponse<Invitation> = await response.json();
 
-      if (response.ok && result.success) {
+      if (result.success) {
         // 성공 시 페이지 갱신
         router.refresh();
       } else {
-        console.error('Failed to respond:', result.error);
-        alert(result.error || '처리 중 오류가 발생했습니다.');
+        console.error('Failed to respond:', result.error.message);
+        alert(result.error.message);
       }
     } catch (error) {
       console.error('Error responding to invitation:', error);

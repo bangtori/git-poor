@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { CommitDetail } from '@/types/commit';
 import CommitList from './_components/commit_list';
 
+import { ApiResponse } from '@/lib/http/reponse';
+
 interface SelectedState {
   date: string | null; // 선택된 날짜
   commits: CommitDetail[]; // 커밋 리스트
@@ -26,22 +28,24 @@ export default function HistoryPage() {
         commits: [],
       }));
       try {
+
+// ...
+
         const res = await fetch(`/api/commits?date=${date}`);
+        const response: ApiResponse<CommitDetail[]> = await res.json();
 
-        if (!res.ok) {
-          throw new Error('Failed to fetch');
+        if (!response.success) {
+           console.error(response.error.message);
+           throw new Error(response.error.message); 
         }
-
-        const responseData = await res.json();
-        const data: CommitDetail[] = responseData.data;
 
         setSelectedState({
           date,
-          commits: data,
+          commits: response.data,
           isLoading: false,
         });
 
-        console.log('[지정 날짜 Commit Data API] 불러온 데이터:', data);
+        console.log('[지정 날짜 Commit Data API] 불러온 데이터:', response.data);
       } catch (error) {
         console.error('커밋 히스토리 로딩 실패:', error);
         setSelectedState((prev) => ({ ...prev, isLoading: false }));

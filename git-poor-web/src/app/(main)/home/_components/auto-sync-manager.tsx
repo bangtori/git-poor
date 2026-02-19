@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { shouldRunAutoSync } from '@/lib/api-service/sync-check-service';
 import { useSync } from '@/components/providers/sync-provider';
+import { ApiResponse } from '@/lib/http/reponse';
+import { SyncResponse } from '@/types';
 
 interface AutoSyncManagerProps {
   lastSyncDate: string | null; // DB에서 가져온 마지막 동기화 시간 (ISO String)
@@ -29,18 +31,18 @@ export default function AutoSyncManager({
         console.log(
           '[AutoSync] 마지막 동기화로부터 시간이 경과하여 동기화를 시작합니다...',
         );
-
         try {
           // 동기화 API 호출 (POST)
           const response = await fetch('/api/commits/sync', { method: 'POST' });
+          const result: ApiResponse<SyncResponse> = await response.json();
 
-          if (response.ok) {
-            console.log('[AutoSync] 동기화 완료! 데이터를 갱신합니다.');
+          if (result.success) {
+            console.log('[AutoSync] 동기화 완료! 데이터를 갱신합니다.', result.data);
 
             // 성공 시 현재 페이지 새로고침
             router.refresh();
           } else {
-            console.warn('[AutoSync] 동기화 요청 실패:', response.status);
+             console.warn('[AutoSync] 동기화 요청 실패:', result.error.message);
           }
         } catch (error) {
           console.error('[AutoSync] 에러 발생:', error);
