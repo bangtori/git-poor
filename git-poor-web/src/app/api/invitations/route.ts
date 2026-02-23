@@ -1,8 +1,19 @@
 import { getCachedUser } from '@/lib/utils/auth-utils';
 import { GroupRole } from '@/types';
-import { sendInvitation, getInvitationByUserId } from '@/services/invitation-service';
+import {
+  sendInvitation,
+  getInvitationByUserId,
+} from '@/services/invitation-service';
 import { getGroupRole } from '@/services/group-service';
-import { ok, created, badRequest, unauthorized, forbidden, serverError, fail } from '@/lib/http/reponse-service';
+import {
+  ok,
+  created,
+  badRequest,
+  unauthorized,
+  forbidden,
+  serverError,
+  fail,
+} from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -67,11 +78,10 @@ export async function POST(request: Request) {
     const result = await sendInvitation(email, group_id);
 
     if (!result.success) {
-      return fail(result.error?.message || '초대 전송 실패');
+      return fail('초대 전송 실패');
     }
 
     return created(result.data);
-
   } catch (error) {
     console.error('[Invitation POST Error]', error);
     return serverError();
@@ -114,7 +124,6 @@ export async function GET() {
     }
 
     return ok(data);
-
   } catch (error) {
     console.error('[Invitation GET Error]', error);
     return serverError();
