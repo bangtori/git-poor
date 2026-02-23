@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getCachedUser } from '@/lib/utils/auth-utils';
 import { CommitDetail } from '@/types/commit';
-import { ok, fail, unauthorized } from '@/lib/http/reponse-service';
+import { ok, fail, unauthorized, serverError, badRequest } from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -33,14 +31,14 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return unauthorized('Unauthorized');
+      return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
 
     if (!date) {
-      return fail('날짜 파라미터가 필요합니다.', 400);
+      return badRequest('날짜 파라미터가 필요합니다.');
     }
 
     const { data: commits, error } = await supabase
@@ -52,12 +50,12 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('지정 날짜 커밋 데이터 불러오기 에러' + error.message);
-      return fail('DB Error');
+      return fail('커밋 데이터를 불러오는데 실패했습니다.');
     }
 
     return ok(commits);
   } catch (error) {
     console.error('[Server Error] 특정 날짜 커밋 가져오기 API Error: ' + error);
-    return fail('서버 에러가 발생했습니다.');
+    return serverError();
   }
 }

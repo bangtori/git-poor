@@ -8,7 +8,7 @@ import {
 } from '@/lib/api-service/streak-service';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { refreshGitHubToken } from '@/lib/api-service/auth-service';
-import { ok, unauthorized, badRequest, fail, serverError } from '@/lib/http/reponse-service';
+import { ok, unauthorized, badRequest, serverError } from '@/lib/http/reponse-service';
 
 // ---------------------------------------------------------
 // 메인 로직 (POST)
@@ -21,7 +21,7 @@ export async function POST() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return unauthorized('인증 정보가 없습니다.');
     }
@@ -77,7 +77,7 @@ export async function POST() {
     const targetUsername = user.user_metadata.user_name;
 
     if (!targetUsername) {
-      return badRequest('GitHub 계정 정보를 찾을 수 없습니다. (Username Missing)');
+      return badRequest('GitHub 계정 정보를 찾을 수 없습니다.');
     }
     // ------------ User 정보 초기화 로직 끝 ------------------
 
@@ -306,6 +306,6 @@ export async function POST() {
     });
   } catch (error: any) {
     console.error('API Error:', error);
-    return fail('서버 에러가 발생했습니다.');
+    return serverError();
   }
 }

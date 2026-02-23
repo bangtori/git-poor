@@ -1,8 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getCachedUser } from '@/lib/utils/auth-utils';
 import { GroupRole } from '@/types';
 import { getMyGroupsService } from '@/services/group-service';
-import { ok, created, badRequest, unauthorized, fail, serverError } from '@/lib/http/reponse-service';
+import {
+  ok,
+  created,
+  badRequest,
+  unauthorized,
+  fail,
+  serverError,
+} from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -88,6 +96,7 @@ export async function POST(request: Request) {
     };
 
     const supabase = await createClient();
+    const admin = createAdminClient();
     const { data: groupData, error: addGroupError } = await supabase
       .from('groups')
       .insert(saveGroupData)
@@ -99,7 +108,7 @@ export async function POST(request: Request) {
       return fail('그룹 생성하는데 문제가 발생했습니다.');
     }
 
-    const { error: addGroupMemberError } = await supabase
+    const { error: addGroupMemberError } = await admin
       .from('group_members')
       .insert([
         { group_id: groupData.id, user_id: user.id, role: GroupRole.OWNER },

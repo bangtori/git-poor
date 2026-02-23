@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import FilledButton from "@/components/ui/filled-button";
-import Modal from "@/components/ui/modal";
+import FilledButton from '@/components/ui/filled-button';
+import Modal from '@/components/ui/modal';
 import { ModalActionProps } from '@/types/modal';
 import { ApiResponse } from '@/lib/http/reponse';
 import { Invitation } from '@/types';
@@ -57,11 +57,12 @@ export default function NewMemberModal({
       }
 
       alert('초대가 완료되었습니다.');
+      setSearchedEmail('');
       onSuccess?.();
       onClose();
     } catch (error: any) {
       console.error(error);
-      alert(error.message || '초대 중 오류가 발생했습니다.');
+      alert('초대 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +84,9 @@ export default function NewMemberModal({
           <label htmlFor="name" className="text-lg font-bold text-text-primary">
             Github Email
           </label>
-          <p className="text-text-secondary text-sm">초대하고자 하는 유저의 깃허브 이메일을 입력해주세요.</p>
+          <p className="text-text-secondary text-sm">
+            초대하고자 하는 유저의 깃허브 이메일을 입력해주세요.
+          </p>
           <input
             id="email"
             name="email"
@@ -93,7 +96,7 @@ export default function NewMemberModal({
             onChange={handleEmailChange}
             className={`p-2 rounded bg-background-input border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary ${
               !isValidEmail && searchedEmail !== ''
-                ? 'border-red-500 focus:ring-red-500' 
+                ? 'border-red-500 focus:ring-red-500'
                 : 'border-border'
             }`}
             required
@@ -113,7 +116,10 @@ export default function NewMemberModal({
           >
             취소
           </button>
-          <FilledButton type="submit" disabled={isLoading || !isValidEmail || !searchedEmail}>
+          <FilledButton
+            type="submit"
+            disabled={isLoading || !isValidEmail || !searchedEmail}
+          >
             {isLoading ? '처리 중...' : '초대하기'}
           </FilledButton>
         </div>
