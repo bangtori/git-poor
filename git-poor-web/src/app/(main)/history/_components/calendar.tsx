@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isToday, addMonths, subMonths } from 'date-fns';
 import { getCalendarDate, getGrassClass } from '@/lib/utils/calendar-utils'; // 작성하신 유틸 함수 경로
 import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
@@ -19,15 +19,19 @@ interface DailyStat {
 interface HistoryCalendarProps {
   // 날짜 문자열(예: '2026-02-10')을 인자로 받음
   onDateSelect: (date: string) => void;
+  initialData?: Record<string, DailyStat>;
 }
 
 export default function HistoryCalendar({
   onDateSelect,
+  initialData = {},
 }: HistoryCalendarProps) {
   // 현재 보고 있는 달력의 기준 날짜 (기본값: 오늘)
   const [currentDate, setCurrentDate] = useState(new Date());
   // 커밋 데이터 (날짜를 키로 하는 객체 형태)
-  const [historyMap, setHistoryMap] = useState<Record<string, DailyStat>>({});
+  const [historyMap, setHistoryMap] =
+    useState<Record<string, DailyStat>>(initialData);
+  const isFirstRender = useRef(true);
 
   //  년, 월 추출
   const currentYear = currentDate.getFullYear();
@@ -47,30 +51,35 @@ export default function HistoryCalendar({
 
   // 월이 바뀌거나 초기 렌더링 시 데이터 로드
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      if (Object.keys(initialData).length > 0) return;
+    }
+
     const fetchCommitHistory = async () => {
       // 캘린더 그리드의 가장 첫 날짜와 마지막 날짜를 구함 (YYYY-MM-DD)
-      if (calendarDays.length === 0) return;
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const days = getCalendarDate(year, month);
+      if (days.length === 0) return;
 
-      const fromDate = calendarDays[0].fullDate;
-      const toDate = calendarDays[calendarDays.length - 1].fullDate;
+      const fromDate = days[0].fullDate;
+      const toDate = days[days.length - 1].fullDate;
 
       try {
         // API 호출
         const res = await fetch(
           `/api/commits/history?from=${fromDate}&to=${toDate}`,
         );
-
-// ...
-
         if (!res.ok) throw new Error('Failed to fetch');
 
         const response: ApiResponse<Record<string, DailyStat>> =
           await res.json();
-        
+
         if (response.success) {
-            setHistoryMap(response.data);
+          setHistoryMap(response.data);
         } else {
-            console.error(response.error.message);
+          console.error(response.error.message);
         }
       } catch (error) {
         console.error('커밋 히스토리 로딩 실패:', error);
@@ -78,7 +87,7 @@ export default function HistoryCalendar({
     };
 
     fetchCommitHistory();
-  }, [currentDate]);
+  }, [currentDate, initialData]);
 
   return (
     <section className="w-full flex flex-col justify-center px-3 py-4 md:px-6">
