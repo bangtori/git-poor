@@ -18,13 +18,16 @@ export default function InvitationItem({ invitation }: InvitationItemProps) {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/invitations/${invitation.id}/respond`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/invitations/${invitation.id}/respond`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ state }),
         },
-        body: JSON.stringify({ state }),
-      });
+      );
 
       const result: ApiResponse<Invitation> = await response.json();
 
@@ -50,12 +53,12 @@ export default function InvitationItem({ invitation }: InvitationItemProps) {
           <div className="flex flex-col gap-1">
             <span className="text-sm text-primary font-bold">Group Invite</span>
             <h3 className="text-lg font-semibold text-text-primary">
-              {invitation.groups.name}
+              {invitation.groups?.name ?? '(Deleted Group)'}
             </h3>
             <p className="text-sm text-text-secondary">
               Penalty:{' '}
               <span className="text-danger">
-                {invitation.groups.penalty_title}
+                {invitation.groups.penalty_title ?? '-'}
               </span>
             </p>
           </div>

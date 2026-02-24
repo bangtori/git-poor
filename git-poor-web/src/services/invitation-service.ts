@@ -108,7 +108,11 @@ export async function updateInvitationStatus(
 ) {
   const supabase = await createClient();
 
-  // 초대 정보 조회 (group_id, invitee_id 필요)
+  const { data: me } = await supabase.auth.getUser();
+  const uid = me?.user?.id;
+  if (!uid) return { success: false, error: 'UNAUTHENTICATED' };
+
+  // 초대 정보 조회
   const { data: invitation, error: fetchError } = await supabase
     .from('group_invitations')
     .select('*')
@@ -120,18 +124,14 @@ export async function updateInvitationStatus(
     return { success: false, error: fetchError };
   }
 
-  // 수락인 경우 그룹 멤버 추가
-  if (status === InviteState.ACCEPTED) {
-    const { error: memberError } = await supabase.from('group_members').insert({
-      group_id: invitation.group_id,
-      user_id: invitation.invitee_id,
-      role: 'member', // 기본 역할
-    });
+  // 본인 초대인지 확인
+  if (invitation.invitee_id !== uid) {
+    return { success: false, error: 'FORBIDDEN' };
+  }
 
-    if (memberError) {
-      console.log('[Group Member Insert Error]', memberError);
-      return { success: false, error: memberError };
-    }
+  // 이미 처리된 초대 방지
+  if (invitation.state !== InviteState.PENDING) {
+    return { success: false, error: 'ALREADY_PROCESSED' };
   }
 
   // 초대 상태 업데이트
@@ -143,9 +143,30 @@ export async function updateInvitationStatus(
     .single();
 
   if (error) {
-    console.log('[Update Invitation Error] ', error.message, error.details);
+    console.log('[Update Invitation Error]', error.message, error.details);
     return { success: false, error };
   }
 
-  return { success: true, data: data as Invitation };
+  // 수락이면 멤버 추가
+  if (status === InviteState.ACCEPTED) {
+    const { error: memberError } = await supabase.from('group_members').insert({
+      group_id: invitation.group_id,
+      user_id: uid,
+      role: 'member',
+    });
+
+    if (memberError) {
+      console.log('[Group Member Insert Error]', memberError);
+
+      // 롤백
+      await supabase
+        .from('group_invitations')
+        .update({ state: InviteState.PENDING })
+        .eq('id', invitationId);
+
+      return { success: false, error: memberError };
+    }
+  }
+
+  return { success: true, data };
 }
