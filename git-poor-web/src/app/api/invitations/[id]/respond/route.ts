@@ -1,7 +1,13 @@
 import { getCachedUser } from '@/lib/utils/auth-utils';
 import { updateInvitationStatus } from '@/services/invitation-service';
 import { InviteState } from '@/types';
-import { ok, badRequest, unauthorized, fail, serverError } from '@/lib/http/reponse-service';
+import {
+  ok,
+  badRequest,
+  unauthorized,
+  fail,
+  serverError,
+} from '@/lib/http/reponse-service';
 
 /**
  * -----------------------------------------------------------------------------
@@ -49,18 +55,22 @@ export async function PATCH(
     const { state } = body;
 
     // 유효성 검사
-    if (!state || (state !== InviteState.ACCEPTED && state !== InviteState.REJECTED)) {
-      return badRequest('잘못된 요청입니다. state는 ACCEPTED 또는 REJECTED여야 합니다.');
+    if (
+      !state ||
+      (state !== InviteState.ACCEPTED && state !== InviteState.REJECTED)
+    ) {
+      return badRequest(
+        '잘못된 요청입니다. state는 ACCEPTED 또는 REJECTED여야 합니다.',
+      );
     }
 
     const result = await updateInvitationStatus(invitationId, state);
 
     if (!result.success) {
-      return fail(result.error?.message || '초대 응답 처리에 실패했습니다.');
+      return fail('초대 응답 처리에 실패했습니다.');
     }
 
     return ok(result.data);
-
   } catch (error) {
     console.error('[Invitation Respond PATCH Error]', error);
     return serverError();
