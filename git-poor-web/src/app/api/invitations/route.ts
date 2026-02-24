@@ -120,7 +120,8 @@ export async function GET() {
     const { success, data, error } = await getInvitationByUserId(user.id);
 
     if (!success) {
-      return fail(error?.message || '초대 목록 조회 실패');
+      console.log(`[Invitation List Fetch Error]`, error);
+      return fail('초대 목록 조회 실패');
     }
 
     return ok(data);

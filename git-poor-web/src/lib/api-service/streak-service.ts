@@ -87,7 +87,7 @@ export async function getStreakData(supabase: SupabaseClient, userId: string) {
     .single();
 
   if (error || !data) {
-    console.warn('⚠️ 스트릭 정보를 가져올 수 없습니다:', error?.message);
+    console.warn('⚠️ 스트릭 정보를 가져올 수 없습니다:', error);
     return {
       current_streak: 0,
       longest_streak: 0,
