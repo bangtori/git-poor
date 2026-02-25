@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils/tailwind-utils';
 import { useRouter } from 'next/navigation';
 import { GroupSummary } from '@/types';
 import Link from 'next/link';
+import Pagination from '@/components/ui/pagination';
 
 interface GroupListSectionProps {
   initialGroups: GroupSummary[];
@@ -18,6 +19,10 @@ export default function GroupListSection({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
   const groups = initialGroups || [];
+
+  const [page, setPage] = useState(1);
+  const totalPages = 12;
+
   return (
     <div className="w-full min-h-screen text-white">
       <div className="flex justify-between items-center">
@@ -74,6 +79,15 @@ export default function GroupListSection({
           </li>
         ))}
       </ul>
+      {/* Pagination Section */}
+      <div className="mt-6 pb-10 flex justify-center">
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onChange={(p) => setPage(p)}
+          maxVisible={5}
+        />
+      </div>
     </div>
   );
 }
