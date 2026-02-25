@@ -91,7 +91,8 @@ export async function getInvitationByUserId(userId: string) {
           )
         `,
     )
-    .eq('invitee_id', userId);
+    .eq('invitee_id', userId)
+    .eq('state', InviteState.PENDING);
 
   if (error) {
     console.log('[Supabase Query Error] ', error.message, error.details);
