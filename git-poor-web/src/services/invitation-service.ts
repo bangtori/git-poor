@@ -4,6 +4,8 @@ import {
   Invitation,
   InviteState,
   InvitationWithGroup,
+  InvitationApiResponse,
+  PaginationMeta,
 } from '@/types';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -77,10 +79,27 @@ export async function sendInvitation(email: string, groupId: string) {
 }
 
 // 내 초대 목록 가져오기
-export async function getInvitationByUserId(userId: string) {
+export async function getInvitationByUserId(
+  userId: string,
+  page: number = 1,
+  limit: number = 10,
+): Promise<InvitationApiResponse> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const safeLimit = Math.min(50, Math.max(1, limit));
+  const safePage = Math.max(1, page);
+  const from = (safePage - 1) * safeLimit;
+  const to = from + safeLimit - 1;
+
+  const emptyMeta: PaginationMeta = {
+    page: safePage,
+    limit: safeLimit,
+    total_count: 0,
+    total_pages: 0,
+    has_next_page: false,
+  };
+
+  const { data, error, count } = await supabase
     .from('group_invitations')
     .select(
       `
@@ -90,16 +109,29 @@ export async function getInvitationByUserId(userId: string) {
             penalty_title
           )
         `,
+      { count: 'exact' },
     )
     .eq('invitee_id', userId)
-    .eq('state', InviteState.PENDING);
+    .eq('state', InviteState.PENDING)
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
   if (error) {
     console.log('[Supabase Query Error] ', error.message, error.details);
-    return { success: false, error };
+    return { data: [], meta: emptyMeta };
   }
 
-  return { success: true, data: data as InvitationWithGroup[] };
+  const total = count ?? 0;
+  return {
+    data: (data as InvitationWithGroup[]) ?? [],
+    meta: {
+      page: safePage,
+      limit: safeLimit,
+      total_count: total,
+      total_pages: Math.ceil(total / safeLimit),
+      has_next_page: total > to + 1,
+    },
+  };
 }
 
 // 초대 수락 & 거절

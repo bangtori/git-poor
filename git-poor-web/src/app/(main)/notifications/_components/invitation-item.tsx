@@ -3,16 +3,18 @@
 import DefaultCard from '@/components/ui/default-card';
 import { InvitationWithGroup, InviteState, Invitation } from '@/types';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { ApiResponse } from '@/lib/http/reponse';
 
 interface InvitationItemProps {
   invitation: InvitationWithGroup;
+  onResponded?: () => void;
 }
 
-export default function InvitationItem({ invitation }: InvitationItemProps) {
+export default function InvitationItem({
+  invitation,
+  onResponded,
+}: InvitationItemProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleResponse = async (state: InviteState) => {
     if (isLoading) return;
@@ -32,8 +34,8 @@ export default function InvitationItem({ invitation }: InvitationItemProps) {
       const result: ApiResponse<Invitation> = await response.json();
 
       if (result.success) {
-        // 성공 시 페이지 갱신
-        router.refresh();
+        // 성공 시 부모에게 알림
+        onResponded?.();
       } else {
         console.error('Failed to respond:', result.error.message);
         alert(result.error.message);

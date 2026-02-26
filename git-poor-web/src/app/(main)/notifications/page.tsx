@@ -1,7 +1,6 @@
 import { getCachedUser } from '@/lib/utils/auth-utils';
 import { getInvitationByUserId } from '@/services/invitation-service';
-import InvitationItem from './_components/invitation-item';
-import { InvitationWithGroup, InviteState } from '@/types';
+import InvitationList from './_components/invitation-list';
 import { redirect } from 'next/navigation';
 
 export default async function NotificationPage() {
@@ -11,8 +10,7 @@ export default async function NotificationPage() {
     redirect('/login');
   }
 
-  const { success, data } = await getInvitationByUserId(user.id);
-  const invitations: InvitationWithGroup[] = success && data ? data : [];
+  const { data: invitations, meta } = await getInvitationByUserId(user.id);
 
   return (
     <div className="w-full p-6 flex flex-col gap-4">
@@ -20,17 +18,7 @@ export default async function NotificationPage() {
         Notifications
       </h1>
 
-      {invitations.length === 0 ? (
-        <div className="text-center py-10 text-text-secondary">
-          <p>받은 초대가 없습니다.</p>
-        </div>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {invitations.map((invitation) => (
-            <InvitationItem key={invitation.id} invitation={invitation} />
-          ))}
-        </ul>
-      )}
+      <InvitationList initialInvitations={invitations} initialMeta={meta} />
     </div>
   );
 }
