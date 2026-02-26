@@ -182,29 +182,13 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const rawPage = Number(searchParams.get('page')) || 1;
-    const rawLimit = Number(searchParams.get('limit')) || 10;
-    // 범위 제한
-    const page = Math.max(1, rawPage);
-    const limit = Math.min(50, Math.max(1, rawLimit));
-
-    // supabase Range
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+    const page = Number(searchParams.get('page')) || 1;
+    const limit = Number(searchParams.get('limit')) || 10;
 
     // Group Service 호출
-    const { data, totalCount } = await getMyGroupsService(user.id, page, limit);
+    const { data, meta } = await getMyGroupsService(user.id, page, limit);
 
-    return ok({
-      data,
-      meta: {
-        page,
-        limit,
-        total_count: totalCount ?? 0,
-        total_pages: Math.ceil((totalCount ?? 0) / limit),
-        has_next_page: (totalCount ?? 0) > to + 1,
-      },
-    });
+    return ok(data, { meta });
   } catch (error) {
     console.error('error: ' + error);
     return serverError();

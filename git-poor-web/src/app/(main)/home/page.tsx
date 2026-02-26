@@ -24,7 +24,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     redirect('/');
   }
 
-  const { data: groups } = await getMyGroupsService(user.id, 1, 10);
+  const { data: groups, meta: groupsMeta } = await getMyGroupsService(
+    user.id,
+    1,
+    10,
+  );
 
   const [initialCommit, lastSyncDate] = await Promise.all([
     getTodayCommitData(supabase, user.id),
@@ -45,7 +49,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const GroupSection = () => (
     <main className="max-w-4xl mx-auto">
-      <GroupListSection initialGroups={groups} />
+      <GroupListSection initialGroups={groups} initialMeta={groupsMeta} />
     </main>
   );
 

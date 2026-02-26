@@ -1,27 +1,54 @@
 'use client';
 import FilledButton from '@/components/ui/filled-button';
 import { Users, SquarePlus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import AddGroupModal from './add-group-modal';
 import { cn } from '@/lib/utils/tailwind-utils';
 import { useRouter } from 'next/navigation';
-import { GroupSummary } from '@/types';
+import { GroupSummary, PaginationMeta } from '@/types';
+import { ApiResponse } from '@/lib/http/reponse';
 import Link from 'next/link';
 import Pagination from '@/components/ui/pagination';
 
 interface GroupListSectionProps {
   initialGroups: GroupSummary[];
+  initialMeta: PaginationMeta;
 }
 
 export default function GroupListSection({
   initialGroups,
+  initialMeta,
 }: GroupListSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [groups, setGroups] = useState<GroupSummary[]>(initialGroups || []);
+  const [meta, setMeta] = useState<PaginationMeta>(initialMeta);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const groups = initialGroups || [];
 
-  const [page, setPage] = useState(1);
-  const totalPages = 12;
+  const fetchPage = useCallback(
+    async (page: number) => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/groups?page=${page}&limit=${meta.limit}`);
+        const result: ApiResponse<GroupSummary[]> = await res.json();
+
+        if (result.success) {
+          setGroups(result.data);
+          if (result.meta) setMeta(result.meta);
+        }
+      } catch (error) {
+        console.error('[Groups Fetch Error]', error);
+      } finally {
+        setIsLoading(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    [meta.limit],
+  );
+
+  const handlePageChange = (page: number) => {
+    fetchPage(page);
+  };
 
   return (
     <div className="w-full min-h-screen text-white">
@@ -40,14 +67,19 @@ export default function GroupListSection({
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {
           console.log('생성 완료! 서버 데이터 다시 불러오는 중...');
-          router.refresh();
+          fetchPage(1);
         }}
       />
       {/* [컨테이너 레이아웃]
         - 기본(모바일): grid grid-cols-2 (2열 카드)
         - md(데스크탑): flex flex-col (1열 리스트) 
       */}
-      <ul className="w-full grid grid-cols-2 gap-3 md:flex md:flex-col md:gap-4">
+      <ul
+        className={cn(
+          'w-full grid grid-cols-2 gap-3 md:flex md:flex-col md:gap-4',
+          isLoading && 'opacity-50 pointer-events-none',
+        )}
+      >
         {groups.map((group) => (
           <li
             key={group.id}
@@ -82,10 +114,11 @@ export default function GroupListSection({
       {/* Pagination Section */}
       <div className="mt-6 pb-10 flex justify-center">
         <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          onChange={(p) => setPage(p)}
+          currentPage={meta.page}
+          totalPages={meta.total_pages}
+          onChange={handlePageChange}
           maxVisible={5}
+          disabled={isLoading}
         />
       </div>
     </div>

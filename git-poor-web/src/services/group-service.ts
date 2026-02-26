@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
+  GroupApiResponse,
   GroupDetail,
   GroupInfo,
   GroupMember,
@@ -9,6 +10,7 @@ import {
   GroupSummary,
   getGroupRoleKey,
   GroupMemberWithCommit,
+  PaginationMeta,
 } from '@/types';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 
@@ -16,13 +18,15 @@ export async function getMyGroupsService(
   userId: string,
   page: number = 1,
   limit: number = 10,
-) {
+): Promise<GroupApiResponse> {
   const supabase = await createClient();
   const admin = createAdminClient();
 
   // 범위 계산
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
+  const safeLimit = Math.min(50, Math.max(1, limit));
+  const safePage = Math.max(1, page);
+  const from = (safePage - 1) * safeLimit;
+  const to = from + safeLimit - 1;
 
   // 내가 속한 그룹 리스트 조회
   const {
@@ -36,17 +40,25 @@ export async function getMyGroupsService(
     .order('joined_at', { ascending: false })
     .range(from, to);
 
+  const emptyMeta: PaginationMeta = {
+    page: safePage,
+    limit: safeLimit,
+    total_count: 0,
+    total_pages: 0,
+    has_next_page: false,
+  };
+
   if (myMembershipsError) {
     console.error(
       '[Supabase Query Error] ',
       myMembershipsError.message,
       myMembershipsError.details,
     );
-    return { data: [], totalCount: 0 };
+    return { data: [], meta: emptyMeta };
   }
 
   if (!myMemberships || myMemberships.length === 0) {
-    return { data: [], totalCount: 0 };
+    return { data: [], meta: emptyMeta };
   }
 
   const groupIds = myMemberships.map((m) => m.group_id);
@@ -61,7 +73,7 @@ export async function getMyGroupsService(
 
   if (groupsError || !groups) {
     console.error('[Groups Fetch Error]', groupsError);
-    return { data: [], totalCount: 0 };
+    return { data: [], meta: emptyMeta };
   }
 
   // 멤버 수는 admin으로 조회해서 서버에서 카운트
@@ -93,7 +105,17 @@ export async function getMyGroupsService(
     };
   });
 
-  return { data: formattedData, totalCount: totalCount ?? 0 };
+  const total = totalCount ?? 0;
+  return {
+    data: formattedData,
+    meta: {
+      page: safePage,
+      limit: safeLimit,
+      total_count: total,
+      total_pages: Math.ceil(total / safeLimit),
+      has_next_page: total > to + 1,
+    },
+  };
 }
 
 // 멤버인지 조회 함수

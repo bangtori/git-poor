@@ -1,11 +1,13 @@
-import { GroupSummary } from './group';
+export {
+  type ApiResponse,
+  type ApiSuccess,
+  type ApiError,
+} from '@/lib/http/reponse';
+
 import { PaginationMeta } from './page-info';
+import { GroupSummary } from './group';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  meta?: PaginationMeta;
-  error?: string;
+export interface GroupApiResponse {
+  data: GroupSummary[];
+  meta: PaginationMeta;
 }
-
-export type GroupListResponse = ApiResponse<GroupSummary[]>;

@@ -1,16 +1,19 @@
 // lib/http/response.ts
+import { PaginationMeta } from '@/types/page-info';
+
 export type ApiSuccess<T> = {
-  success: true
-  data: T
-}
+  success: true;
+  data: T;
+  meta?: PaginationMeta;
+};
 
 export type ApiError = {
-  success: false
+  success: false;
   error: {
-    message: string
-    code?: string
-    details?: unknown
-  }
-}
+    message: string;
+    code?: string;
+    details?: unknown;
+  };
+};
 
-export type ApiResponse<T> = ApiSuccess<T> | ApiError
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
