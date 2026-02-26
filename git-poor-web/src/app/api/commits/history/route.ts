@@ -58,16 +58,7 @@ export async function GET(request: Request) {
     }
 
     // --- 날짜 범위에 해당하는 커밋들 가져오기 ---
-    const result = await getHistoryMapByDateRange(user.id, from, to);
-
-    if (!result.success) {
-      console.error(result.error);
-      return fail('커밋 데이터를 불러오는데 실패했습니다.');
-    }
-
-    // --- 날짜별로 그루핑  ---
-    // 결과 형태: { "2024-02-01": { count: 3, total_changes: 150 }, ... }
-    const historyMap = result.data;
+    const historyMap = await getHistoryMapByDateRange(user.id, from, to);
 
     return ok(historyMap);
   } catch {

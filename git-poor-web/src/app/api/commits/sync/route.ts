@@ -8,7 +8,12 @@ import {
 } from '@/lib/api-service/streak-service';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { refreshGitHubToken } from '@/lib/api-service/auth-service';
-import { ok, unauthorized, badRequest, serverError } from '@/lib/http/reponse-service';
+import {
+  ok,
+  unauthorized,
+  badRequest,
+  serverError,
+} from '@/lib/http/reponse-service';
 
 // ---------------------------------------------------------
 // 메인 로직 (POST)
@@ -69,7 +74,9 @@ export async function POST() {
     }
 
     if (!currentToken) {
-      return unauthorized('GitHub 연결 정보가 만료되었습니다. 다시 로그인해주세요.');
+      return unauthorized(
+        'GitHub 연결 정보가 만료되었습니다. 다시 로그인해주세요.',
+      );
     }
 
     const token = session.provider_token;
@@ -107,15 +114,12 @@ export async function POST() {
       const currentStreak = await getStreakData(adminSupabase, user.id);
 
       return ok({
-        message: '오늘의 커밋이 없습니다.',
-        data: {
-          date: todayTarget,
-          commit_count: 0,
-          total_changes: 0,
-          languages: [],
-          is_success: false,
-          streak: currentStreak, // 스트릭 기본값 포함
-        },
+        date: todayTarget,
+        commit_count: 0,
+        total_changes: 0,
+        languages: [],
+        is_success: false,
+        streak: currentStreak,
       });
     }
 
@@ -287,21 +291,21 @@ export async function POST() {
       { changes: 0, langs: new Set<string>() },
     );
 
+    console.log(
+      commitsToInsert.length > 0
+        ? '신규 커밋 업데이트 완료'
+        : '최신 상태입니다.',
+    );
+
     return ok({
-      message:
-        commitsToInsert.length > 0
-          ? '신규 커밋 업데이트 완료'
-          : '최신 상태입니다.',
-      data: {
-        date: todayTarget,
-        commit_count: allTodayCommits?.length || 0,
-        total_changes: totalStats.changes,
-        languages: Array.from(totalStats.langs),
-        is_success: true,
-        streak: {
-          current_streak: updatedStreak.current,
-          longest_streak: updatedStreak.longest,
-        },
+      date: todayTarget,
+      commit_count: allTodayCommits?.length || 0,
+      total_changes: totalStats.changes,
+      languages: Array.from(totalStats.langs),
+      is_success: true,
+      streak: {
+        current_streak: updatedStreak.current,
+        longest_streak: updatedStreak.longest,
       },
     });
   } catch (error: any) {

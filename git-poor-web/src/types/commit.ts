@@ -79,8 +79,3 @@ export interface CommitDetail {
   committed_at: string; // ISO Date string
   commit_date: string;
 }
-
-export interface SyncResponse {
-  message: string;
-  data: TodayCommitSummary;
-}

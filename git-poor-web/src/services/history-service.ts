@@ -10,7 +10,7 @@ export async function getHistoryMapByDateRange(
   userId: string,
   from: string,
   to: string,
-) {
+): Promise<Record<string, DailyStat>> {
   const supabase = await createClient();
 
   const { data: commits, error } = await supabase
@@ -21,7 +21,8 @@ export async function getHistoryMapByDateRange(
     .lte('commit_date', to);
 
   if (error) {
-    return { success: false, error };
+    console.error('[History Fetch Error]', error.message, error.details);
+    return {};
   }
 
   const historyMap: Record<string, DailyStat> = {};
@@ -39,5 +40,5 @@ export async function getHistoryMapByDateRange(
     historyMap[dateKey].total_changes += c.total_changes;
   });
 
-  return { success: true, data: historyMap };
+  return historyMap;
 }
