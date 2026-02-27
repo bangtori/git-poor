@@ -1,5 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
-import { ok, fail, serverError, unauthorized, badRequest } from '@/lib/http/reponse-service';
+import {
+  ok,
+  fail,
+  serverError,
+  unauthorized,
+  badRequest,
+} from '@/lib/http/reponse-service';
+import { getHistoryMapByDateRange } from '@/services/history-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -50,41 +58,15 @@ export async function GET(request: Request) {
       return badRequest('날짜 범위가 필요합니다.');
     }
 
-    // --- (1) 날짜 범위에 해당하는 커밋들 가져오기 ---
-    const { data: commits, error } = await supabase
-      .from('commits')
-      .select('commit_date, total_changes')
-      .eq('user_id', user.id)
-      .gte('commit_date', from)
-      .lte('commit_date', to);
-
-    if (error) {
-      console.error(error);
-      return fail('커밋 데이터를 불러오는데 실패했습니다.');
-    }
-
-    // --- (2) 날짜별로 그루핑 (Map or Object) ---
-    // 결과 형태: { "2024-02-01": { count: 3, total_changes: 150 }, ... }
-    const historyMap: Record<
-      string,
-      { commit_date: string; commit_count: number; total_changes: number }
-    > = {};
-
-    commits?.forEach((c) => {
-      const dateKey = c.commit_date;
-      if (!historyMap[dateKey]) {
-        historyMap[dateKey] = {
-          commit_date: dateKey,
-          commit_count: 0,
-          total_changes: 0,
-        };
-      }
-      historyMap[dateKey].commit_count += 1;
-      historyMap[dateKey].total_changes += c.total_changes;
-    });
+    // --- 날짜 범위에 해당하는 커밋들 가져오기 ---
+    const historyMap = await getHistoryMapByDateRange(user.id, from, to);
 
     return ok(historyMap);
   } catch (error) {
-    return serverError();
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
+    console.error('[History API Error]', error);
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

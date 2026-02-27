@@ -8,6 +8,7 @@ import { Check, Square } from 'lucide-react';
 import { ModalActionProps } from '@/types/modal';
 import { cn } from '@/lib/utils/tailwind-utils';
 import { ApiResponse } from '@/lib/http/reponse';
+import { handleActionError } from '@/lib/error/handle-action-error';
 
 const RECOMMENDED_PENALTIES = [
   '벌금 1,000원',
@@ -69,7 +70,10 @@ export default function AddGroupModal({
       });
       const result: ApiResponse<any> = await response.json();
 
-      if (!result.success) throw new Error(result.error.message);
+      if (!result.success) {
+        handleActionError(result.error);
+        return;
+      }
 
       setFormData({
         name: '',
@@ -83,7 +87,7 @@ export default function AddGroupModal({
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert('그룹을 생성하는데 오류가 발생했습니다.');
+      handleActionError({ message: '그룹을 생성하는데 오류가 발생했습니다.' });
     } finally {
       setIsLoading(false);
     }

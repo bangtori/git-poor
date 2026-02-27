@@ -1,7 +1,8 @@
-// src/lib/api-service/commit-service.ts
+// src/services/commit-service.ts
 import { SupabaseClient } from '@supabase/supabase-js';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
 import { TodayCommitSummary } from '@/types';
+import { AppError } from '@/lib/error/app-error';
 
 export async function getTodayCommitData(
   supabase: SupabaseClient,
@@ -22,6 +23,22 @@ export async function getTodayCommitData(
       .eq('id', userId)
       .single(),
   ]);
+
+  if (commitRes.error) {
+    throw new AppError(
+      'SERVER_ERROR',
+      '오늘 커밋 데이터 조회에 실패했습니다.',
+      commitRes.error,
+    );
+  }
+
+  if (userRes.error) {
+    throw new AppError(
+      'SERVER_ERROR',
+      '유저 스트릭 정보 조회에 실패했습니다.',
+      userRes.error,
+    );
+  }
 
   const commits = commitRes.data;
 

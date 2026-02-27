@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { CommitDetail } from '@/types/commit';
-import { ok, fail, unauthorized, serverError, badRequest } from '@/lib/http/reponse-service';
+import {
+  ok,
+  fail,
+  unauthorized,
+  serverError,
+  badRequest,
+} from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -50,12 +57,15 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('지정 날짜 커밋 데이터 불러오기 에러' + error.message);
-      return fail('커밋 데이터를 불러오는데 실패했습니다.');
+      return fail('SERVER_ERROR', '커밋 데이터를 불러오는데 실패했습니다.');
     }
 
     return ok(commits);
   } catch (error) {
-    console.error('[Server Error] 특정 날짜 커밋 가져오기 API Error: ' + error);
-    return serverError();
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
+    console.error('[Server Error] 특정 날짜 커밋 가져오기 API Error:', error);
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

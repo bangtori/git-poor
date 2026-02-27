@@ -11,6 +11,7 @@ import {
   fail,
   serverError,
 } from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
 
     if (addGroupError) {
       console.log('그룹 생성 에러' + addGroupError.message);
-      return fail('그룹 생성하는데 문제가 발생했습니다.');
+      return fail('SERVER_ERROR', '그룹 생성하는데 문제가 발생했습니다.');
     }
 
     const { error: addGroupMemberError } = await admin
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
       console.log('그룹 멤버 테이블 추가 에러' + addGroupMemberError.message);
       // 롤백: 방금 만든 그룹 삭제
       await supabase.from('groups').delete().eq('id', groupData.id);
-      return fail('그룹 생성하는데 문제가 발생했습니다.');
+      return fail('SERVER_ERROR', '그룹 생성하는데 문제가 발생했습니다.');
     }
 
     return created(groupData);
@@ -182,31 +183,18 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const rawPage = Number(searchParams.get('page')) || 1;
-    const rawLimit = Number(searchParams.get('limit')) || 10;
-    // 범위 제한
-    const page = Math.max(1, rawPage);
-    const limit = Math.min(50, Math.max(1, rawLimit));
-
-    // supabase Range
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+    const page = Number(searchParams.get('page')) || 1;
+    const limit = Number(searchParams.get('limit')) || 10;
 
     // Group Service 호출
-    const { data, totalCount } = await getMyGroupsService(user.id, page, limit);
+    const { data, meta } = await getMyGroupsService(user.id, page, limit);
 
-    return ok({
-      data,
-      meta: {
-        page,
-        limit,
-        total_count: totalCount ?? 0,
-        total_pages: Math.ceil((totalCount ?? 0) / limit),
-        has_next_page: (totalCount ?? 0) > to + 1,
-      },
-    });
+    return ok(data, { meta });
   } catch (error) {
-    console.error('error: ' + error);
-    return serverError();
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
+    console.error('error: ', error);
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

@@ -18,7 +18,7 @@ export default function CommitList({ selectedDate, commits }: CommitListProps) {
         ) : (
           <ul className="flex flex-col gap-4 w-full">
             {commits.map((commit) => (
-              <CommitListCell commit={commit} />
+              <CommitListCell commit={commit} key={commit.commit_sha} />
             ))}
           </ul>
         )}

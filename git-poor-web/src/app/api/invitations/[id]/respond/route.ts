@@ -8,6 +8,7 @@ import {
   fail,
   serverError,
 } from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -66,13 +67,12 @@ export async function PATCH(
 
     const result = await updateInvitationStatus(invitationId, state);
 
-    if (!result.success) {
-      return fail('초대 응답 처리에 실패했습니다.');
-    }
-
-    return ok(result.data);
+    return ok(result);
   } catch (error) {
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
     console.error('[Invitation Respond PATCH Error]', error);
-    return serverError();
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

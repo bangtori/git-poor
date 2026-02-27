@@ -9,19 +9,21 @@ import { TodayCommitSummary } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { useSync } from '@/components/providers/sync-provider';
 import { ApiResponse } from '@/lib/http/reponse';
-import { SyncResponse } from '@/types';
+import ErrorFallbackCard from '@/components/ui/error-fallback-card';
+import { handleActionError } from '@/lib/error/handle-action-error';
 
 interface MyProfileSectionProps {
   user: User;
-  initialCommit: TodayCommitSummary; // 서버에서 받아온 초기 데이터
+  initialCommit: TodayCommitSummary | null;
 }
 
 export default function MyProfileSection({
   user,
   initialCommit,
 }: MyProfileSectionProps) {
-  const [commitSummary, setCommitSummary] =
-    useState<TodayCommitSummary>(initialCommit);
+  const [commitSummary, setCommitSummary] = useState<TodayCommitSummary | null>(
+    initialCommit,
+  );
   const { isSyncing, setIsSyncing } = useSync();
 
   useEffect(() => {
@@ -74,20 +76,32 @@ export default function MyProfileSection({
     setIsSyncing(true);
     try {
       const response = await fetch('/api/commits/sync', { method: 'POST' });
-      const result: ApiResponse<SyncResponse> = await response.json();
+      const result: ApiResponse<TodayCommitSummary> = await response.json();
 
       if (result.success) {
         // 성공 시 상태 업데이트 -> UserProfileCard와 TodayCommitCard가 동시에 바뀜!
-        setCommitSummary(result.data.data);
+        setCommitSummary(result.data);
       } else {
-         alert(result.error.message);
+        handleActionError(result.error);
       }
     } catch (error) {
-      alert('동기화 중 오류가 발생했습니다.');
+      handleActionError({ message: '동기화 중 오류가 발생했습니다.' });
     } finally {
       setIsSyncing(false);
     }
   };
+
+  if (!commitSummary) {
+    return (
+      <main className="max-w-4xl mx-auto space-y-6">
+        <ErrorFallbackCard
+          title="내 프로필"
+          message="프로필 데이터를 불러올 수 없습니다"
+          onRetry={() => window.location.reload()}
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-4xl mx-auto space-y-6">

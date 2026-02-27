@@ -1,11 +1,19 @@
-import { GroupSummary } from './group';
-import { PaginationMeta } from './page-info';
+export {
+  type ApiResponse,
+  type ApiSuccess,
+  type ApiError,
+} from '@/lib/http/reponse';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  meta?: PaginationMeta;
-  error?: string;
+import { PaginationMeta } from './page-info';
+import { GroupSummary } from './group';
+import { InvitationWithGroup } from './invatation';
+
+export interface GroupApiResponse {
+  data: GroupSummary[];
+  meta: PaginationMeta;
 }
 
-export type GroupListResponse = ApiResponse<GroupSummary[]>;
+export interface InvitationApiResponse {
+  data: InvitationWithGroup[];
+  meta: PaginationMeta;
+}

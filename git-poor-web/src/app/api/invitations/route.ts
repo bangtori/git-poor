@@ -14,6 +14,7 @@ import {
   serverError,
   fail,
 } from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -77,14 +78,13 @@ export async function POST(request: Request) {
 
     const result = await sendInvitation(email, group_id);
 
-    if (!result.success) {
-      return fail('초대 전송 실패');
-    }
-
-    return created(result.data);
+    return created(result);
   } catch (error) {
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
     console.error('[Invitation POST Error]', error);
-    return serverError();
+    return serverError('서버 에러가 발생했습니다.');
   }
 }
 
@@ -110,21 +110,20 @@ export async function POST(request: Request) {
  * - DB Select 실패 또는 서버 에러 발생 시.
  * -----------------------------------------------------------------------------
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getCachedUser();
     if (!user) {
       return unauthorized();
     }
 
-    const { success, data, error } = await getInvitationByUserId(user.id);
+    const { searchParams } = new URL(request.url);
+    const page = Number(searchParams.get('page')) || 1;
+    const limit = Number(searchParams.get('limit')) || 10;
 
-    if (!success) {
-      console.log(`[Invitation List Fetch Error]`, error);
-      return fail('초대 목록 조회 실패');
-    }
+    const { data, meta } = await getInvitationByUserId(user.id, page, limit);
 
-    return ok(data);
+    return ok(data, { meta });
   } catch (error) {
     console.error('[Invitation GET Error]', error);
     return serverError();
