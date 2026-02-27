@@ -14,6 +14,7 @@ import {
   serverError,
   fail,
 } from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -77,14 +78,13 @@ export async function POST(request: Request) {
 
     const result = await sendInvitation(email, group_id);
 
-    if (!result.success) {
-      return fail('초대 전송 실패');
-    }
-
-    return created(result.data);
+    return created(result);
   } catch (error) {
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
     console.error('[Invitation POST Error]', error);
-    return serverError();
+    return serverError('서버 에러가 발생했습니다.');
   }
 }
 

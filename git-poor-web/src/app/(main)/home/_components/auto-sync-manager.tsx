@@ -2,10 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { shouldRunAutoSync } from '@/lib/api-service/sync-check-service';
+import { shouldRunAutoSync } from '@/lib/utils/sync-check';
 import { useSync } from '@/components/providers/sync-provider';
 import { ApiResponse } from '@/lib/http/reponse';
 import { TodayCommitSummary } from '@/types';
+import { handleActionError } from '@/lib/error/handle-action-error';
 
 interface AutoSyncManagerProps {
   lastSyncDate: string | null; // DB에서 가져온 마지막 동기화 시간 (ISO String)
@@ -45,7 +46,7 @@ export default function AutoSyncManager({
             // 성공 시 현재 페이지 새로고침
             router.refresh();
           } else {
-            console.warn('[AutoSync] 동기화 요청 실패:', result.error.message);
+            handleActionError(result.error);
           }
         } catch (error) {
           console.error('[AutoSync] 에러 발생:', error);

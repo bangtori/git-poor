@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { AppError } from '@/lib/error/app-error';
 
 export interface DailyStat {
   commit_date: string;
@@ -21,8 +22,11 @@ export async function getHistoryMapByDateRange(
     .lte('commit_date', to);
 
   if (error) {
-    console.error('[History Fetch Error]', error.message, error.details);
-    return {};
+    throw new AppError(
+      'SERVER_ERROR',
+      `커밋 히스토리 조회 실패: ${error.message}`,
+      error,
+    );
   }
 
   const historyMap: Record<string, DailyStat> = {};

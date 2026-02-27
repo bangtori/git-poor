@@ -1,5 +1,6 @@
 // lib/http/response.ts
 import { PaginationMeta } from '@/types/page-info';
+import { ErrorCode } from '@/types/error';
 
 export type ApiSuccess<T> = {
   success: true;
@@ -11,7 +12,7 @@ export type ApiError = {
   success: false;
   error: {
     message: string;
-    code?: string;
+    code?: ErrorCode;
     details?: unknown;
   };
 };

@@ -1,7 +1,13 @@
 // src/app/api/commits/today/route.ts
 import { createClient } from '@/lib/supabase/server';
-import { getTodayCommitData } from '@/lib/api-service/commit-service';
-import { ok, unauthorized, serverError } from '@/lib/http/reponse-service';
+import { getTodayCommitData } from '@/services/commit-service';
+import {
+  ok,
+  unauthorized,
+  fail,
+  serverError,
+} from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 export async function GET() {
   try {
@@ -20,7 +26,10 @@ export async function GET() {
     // 결과 반환
     return ok(data);
   } catch (error) {
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
     console.error('API Error:', error);
-    return serverError();
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

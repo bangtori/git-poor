@@ -5,15 +5,17 @@ import { getExtension, inferLanguage } from '@/lib/utils/git-info-utils';
 import {
   updateStreakIncremental,
   getStreakData,
-} from '@/lib/api-service/streak-service';
+} from '@/services/streak-service';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { refreshGitHubToken } from '@/lib/api-service/auth-service';
+import { refreshGitHubToken } from '@/services/auth-service';
 import {
   ok,
   unauthorized,
   badRequest,
   serverError,
+  fail,
 } from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 // ---------------------------------------------------------
 // 메인 로직 (POST)
@@ -309,7 +311,10 @@ export async function POST() {
       },
     });
   } catch (error: any) {
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
     console.error('API Error:', error);
-    return serverError();
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

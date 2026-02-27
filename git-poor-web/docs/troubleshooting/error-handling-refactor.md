@@ -79,16 +79,79 @@ export type ErrorCode =
   | 'NETWORK_ERROR';
 ```
 
+### 4.2 AppError 클래스 도입
+
+서비스 레이어에서 에러를 throw할 때 사용할 표준 에러 클래스를 정의했다.
+
+```ts
+export class AppError extends Error {
+  constructor(
+    public code: ErrorCode,
+    message: string,
+    public details?: unknown,
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+```
+
+이를 통해:
+
+- 서비스에서 `throw new AppError('NOT_FOUND', '그룹을 찾을 수 없습니다.')`처럼 코드와 메시지를 함께 던질 수 있게 됨
+- API Route에서 `instanceof AppError`로 도메인 에러와 예상치 못한 에러를 명확히 분기
+- 클라이언트까지 코드 기반 분기가 관통하는 구조 확보
+
 ## 4. 레이어별 책임 재정립
 
-- Service: 실패 시 throw (null로 숨기지 않음)
-- API Route: throw를 catch하여 ApiResponse로 변환
-- Client Action: handleActionError로 사용자 메시지 처리
+- Service: 실패 시 `throw new AppError(code, message)` (null로 숨기지 않음)
+- API Route: throw를 catch하여 `fail(code, message, details)`로 변환
+- Client Action: `handleActionError`로 사용자 메시지 처리
 - Page (Server Component): 필수 데이터 실패 시 throw → error.tsx
+
+서비스에서 이미 상황별 한국어 메시지를 정의하여 throw하기 때문에, `handleActionError`는 코드별 분기 없이 **API가 내려준 message를 그대로 표시**하는 단순한 구조로 충분했다.
 
 ---
 
-## 5. 리팩토링의 의미
+## 5. 대시보드의 부분 에러 처리: Promise.allSettled 패턴
+
+홈 대시보드는 여러 섹션(프로필, 그룹 목록 등)을 합쳐놓은 구조이기 때문에, 한 섹션의 데이터 fetch 실패가 전체 페이지 크래시로 이어지면 안 되었다.
+
+이를 위해 `Promise.allSettled`를 활용한 부분 에러 처리 패턴을 도입했다.
+
+```ts
+const [groupsResult, commitResult, syncResult] = await Promise.allSettled([
+  getMyGroupsService(user.id, 1, 10),
+  getTodayCommitData(supabase, user.id),
+  getLastSyncDate(supabase, user.id),
+]);
+
+// UNAUTHENTICATED면 전체 에러 페이지로
+for (const result of [groupsResult, commitResult, syncResult]) {
+  if (
+    result.status === 'rejected' &&
+    result.reason instanceof AppError &&
+    result.reason.code === 'UNAUTHENTICATED'
+  ) {
+    throw result.reason; // → error.tsx
+  }
+}
+
+// 나머지는 null로 전달 → 해당 섹션만 에러 카드 표시
+const groupsData =
+  groupsResult.status === 'fulfilled' ? groupsResult.value : null;
+```
+
+각 섹션 컴포넌트는 `null`을 받으면 `ErrorFallbackCard`를 렌더링하여, **페이지 전체가 아닌 해당 카드 영역만** 에러 UI를 표시한다.
+
+핵심 설계 포인트:
+
+- **인증 에러(UNAUTHENTICATED)**: 어떤 Promise에서 나오든 전체 에러 페이지로 throw
+- **기타 에러**: 해당 섹션만 fallback 카드 표시, 나머지 섹션은 정상 동작
+
+---
+
+## 6. 리팩토링의 의미
 
 이번 작업은 단순한 코드 정리가 아니라,
 
@@ -102,7 +165,7 @@ export type ErrorCode =
 
 ---
 
-## 6. 결론
+## 7. 결론
 
 에러 핸들링을 구조화하는 과정은 코드 수정이 아니라 **아키텍처 설계의
 문제**였다.

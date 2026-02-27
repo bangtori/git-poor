@@ -7,6 +7,7 @@ import {
   badRequest,
 } from '@/lib/http/reponse-service';
 import { getHistoryMapByDateRange } from '@/services/history-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -61,7 +62,11 @@ export async function GET(request: Request) {
     const historyMap = await getHistoryMapByDateRange(user.id, from, to);
 
     return ok(historyMap);
-  } catch {
-    return serverError();
+  } catch (error) {
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
+    console.error('[History API Error]', error);
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

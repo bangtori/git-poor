@@ -6,6 +6,7 @@ import Modal from '@/components/ui/modal';
 import { ModalActionProps } from '@/types/modal';
 import { ApiResponse } from '@/lib/http/reponse';
 import { Invitation } from '@/types';
+import { handleActionError } from '@/lib/error/handle-action-error';
 
 interface NewMemberModalProps extends ModalActionProps {
   groupId: string;
@@ -53,7 +54,8 @@ export default function NewMemberModal({
       const result: ApiResponse<Invitation> = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error.message);
+        handleActionError(result.error);
+        return;
       }
 
       alert('초대가 완료되었습니다.');
@@ -62,7 +64,7 @@ export default function NewMemberModal({
       onClose();
     } catch (error: any) {
       console.error(error);
-      alert('초대 중 오류가 발생했습니다.');
+      handleActionError({ message: '초대 중 오류가 발생했습니다.' });
     } finally {
       setIsLoading(false);
     }

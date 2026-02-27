@@ -47,11 +47,11 @@ type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
 ```ts
 // lib/http/reponse-service.ts
-export function ok<T>(data: T) { ... }      // 200
-export function fail(message: string) { ... } // 500
-export const created = <T>(data: T) => ...    // 201
-export const badRequest = (msg) => ...        // 400
-export const unauthorized = (msg) => ...      // 401
+export function ok<T>(data: T) { ... }                     // 200
+export function fail(code, message, details?) { ... }      // code → HTTP status 매핑
+export const created = <T>(data: T) => ...                 // 201
+export const badRequest = (msg) => ...                     // 400
+export const unauthorized = (msg) => ...                   // 401
 ```
 
 이로써 라우트 코드가 간결해지고, 응답 형식이 자동으로 보장되었다.

@@ -5,6 +5,7 @@ import { ApiResponse } from '@/lib/http/reponse';
 import InvitationItem from './invitation-item';
 import Pagination from '@/components/ui/pagination';
 import { useState, useCallback } from 'react';
+import { handleActionError } from '@/lib/error/handle-action-error';
 
 interface InvitationListProps {
   initialInvitations: InvitationWithGroup[];
@@ -32,6 +33,8 @@ export default function InvitationList({
         if (result.success) {
           setInvitations(result.data);
           if (result.meta) setMeta(result.meta);
+        } else {
+          handleActionError(result.error);
         }
       } catch (error) {
         console.error('[Invitations Fetch Error]', error);

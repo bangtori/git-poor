@@ -4,6 +4,7 @@ import DefaultCard from '@/components/ui/default-card';
 import { InvitationWithGroup, InviteState, Invitation } from '@/types';
 import { useState } from 'react';
 import { ApiResponse } from '@/lib/http/reponse';
+import { handleActionError } from '@/lib/error/handle-action-error';
 
 interface InvitationItemProps {
   invitation: InvitationWithGroup;
@@ -37,12 +38,11 @@ export default function InvitationItem({
         // 성공 시 부모에게 알림
         onResponded?.();
       } else {
-        console.error('Failed to respond:', result.error.message);
-        alert(result.error.message);
+        handleActionError(result.error);
       }
     } catch (error) {
       console.error('Error responding to invitation:', error);
-      alert('오류가 발생했습니다.');
+      handleActionError({ message: '오류가 발생했습니다.' });
     } finally {
       setIsLoading(false);
     }

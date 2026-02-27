@@ -11,6 +11,7 @@ import {
   fail,
   serverError,
 } from '@/lib/http/reponse-service';
+import { AppError } from '@/lib/error/app-error';
 
 /**
  * -----------------------------------------------------------------------------
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
 
     if (addGroupError) {
       console.log('그룹 생성 에러' + addGroupError.message);
-      return fail('그룹 생성하는데 문제가 발생했습니다.');
+      return fail('SERVER_ERROR', '그룹 생성하는데 문제가 발생했습니다.');
     }
 
     const { error: addGroupMemberError } = await admin
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
       console.log('그룹 멤버 테이블 추가 에러' + addGroupMemberError.message);
       // 롤백: 방금 만든 그룹 삭제
       await supabase.from('groups').delete().eq('id', groupData.id);
-      return fail('그룹 생성하는데 문제가 발생했습니다.');
+      return fail('SERVER_ERROR', '그룹 생성하는데 문제가 발생했습니다.');
     }
 
     return created(groupData);
@@ -190,7 +191,10 @@ export async function GET(request: Request) {
 
     return ok(data, { meta });
   } catch (error) {
-    console.error('error: ' + error);
-    return serverError();
+    if (error instanceof AppError) {
+      return fail(error.code, error.message, error.details);
+    }
+    console.error('error: ', error);
+    return serverError('서버 에러가 발생했습니다.');
   }
 }

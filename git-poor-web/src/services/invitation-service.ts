@@ -8,6 +8,7 @@ import {
   PaginationMeta,
 } from '@/types';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AppError } from '@/lib/error/app-error';
 
 export async function sendInvitation(email: string, groupId: string) {
   const supabase = await createClient();
@@ -20,7 +21,7 @@ export async function sendInvitation(email: string, groupId: string) {
   console.log('[AUTH]', me?.user?.id, meErr);
   const myId = me?.user?.id;
 
-  if (!myId) return { success: false, error: 'UNAUTHENTICATED' };
+  if (!myId) throw new AppError('UNAUTHENTICATED', '로그인이 필요합니다.');
 
   const { data: roleRow, error: roleErr } = await supabase
     .from('group_members')
@@ -30,9 +31,9 @@ export async function sendInvitation(email: string, groupId: string) {
     .maybeSingle();
 
   console.log('[MEMBER]', { uid: myId, groupId, roleRow, roleErr });
-  if (roleErr) return { success: false, error: roleErr };
+  if (roleErr) throw new AppError('SERVER_ERROR', '멤버 조회 실패', roleErr);
   if (!roleRow || !['owner', 'admin'].includes(roleRow.role)) {
-    return { success: false, error: 'FORBIDDEN' };
+    throw new AppError('FORBIDDEN', '초대 권한이 없습니다.');
   }
 
   // 이메일로 유저 찾기 (github_infos 테이블)
@@ -45,8 +46,7 @@ export async function sendInvitation(email: string, groupId: string) {
   console.log('[User Info] ', userInfo);
   console.log('[User Error] ', userError);
   if (userError) {
-    console.log('[User Query Error]', userError);
-    return { success: false, error: userError };
+    throw new AppError('SERVER_ERROR', '유저 조회 실패', userError);
   }
 
   if (!userInfo) {
@@ -71,11 +71,10 @@ export async function sendInvitation(email: string, groupId: string) {
     .single();
 
   if (error) {
-    console.log('[Supabase Query Error] ', error.message, error.details);
-    return { success: false, error };
+    throw new AppError('SERVER_ERROR', '초대장 생성 실패', error);
   }
 
-  return { success: true, data: data as Invitation };
+  return data as Invitation;
 }
 
 // 내 초대 목록 가져오기
@@ -117,8 +116,7 @@ export async function getInvitationByUserId(
     .range(from, to);
 
   if (error) {
-    console.log('[Supabase Query Error] ', error.message, error.details);
-    return { data: [], meta: emptyMeta };
+    throw new AppError('SERVER_ERROR', '초대 목록 조회 실패', error);
   }
 
   const total = count ?? 0;
@@ -143,7 +141,7 @@ export async function updateInvitationStatus(
 
   const { data: me } = await supabase.auth.getUser();
   const uid = me?.user?.id;
-  if (!uid) return { success: false, error: 'UNAUTHENTICATED' };
+  if (!uid) throw new AppError('UNAUTHENTICATED', '로그인이 필요합니다.');
 
   // 초대 정보 조회
   const { data: invitation, error: fetchError } = await supabase
@@ -153,18 +151,21 @@ export async function updateInvitationStatus(
     .single();
 
   if (fetchError || !invitation) {
-    console.log('[Invitation Fetch Error]', fetchError);
-    return { success: false, error: fetchError };
+    throw new AppError(
+      'NOT_FOUND',
+      '초대 정보를 찾을 수 없습니다.',
+      fetchError,
+    );
   }
 
   // 본인 초대인지 확인
   if (invitation.invitee_id !== uid) {
-    return { success: false, error: 'FORBIDDEN' };
+    throw new AppError('FORBIDDEN', '본인의 초대만 응답할 수 있습니다.');
   }
 
   // 이미 처리된 초대 방지
   if (invitation.state !== InviteState.PENDING) {
-    return { success: false, error: 'ALREADY_PROCESSED' };
+    throw new AppError('ALREADY_PROCESSED', '이미 처리된 초대입니다.');
   }
 
   // 초대 상태 업데이트
@@ -176,8 +177,7 @@ export async function updateInvitationStatus(
     .single();
 
   if (error) {
-    console.log('[Update Invitation Error]', error.message, error.details);
-    return { success: false, error };
+    throw new AppError('SERVER_ERROR', '초대 상태 업데이트 실패', error);
   }
 
   // 수락이면 멤버 추가
@@ -189,17 +189,15 @@ export async function updateInvitationStatus(
     });
 
     if (memberError) {
-      console.log('[Group Member Insert Error]', memberError);
-
       // 롤백
       await supabase
         .from('group_invitations')
         .update({ state: InviteState.PENDING })
         .eq('id', invitationId);
 
-      return { success: false, error: memberError };
+      throw new AppError('SERVER_ERROR', '그룹 멤버 추가 실패', memberError);
     }
   }
 
-  return { success: true, data };
+  return data;
 }

@@ -13,6 +13,7 @@ import {
   PaginationMeta,
 } from '@/types';
 import { getGitPoorDate } from '@/lib/utils/date-utils';
+import { AppError } from '@/lib/error/app-error';
 
 export async function getMyGroupsService(
   userId: string,
@@ -49,12 +50,11 @@ export async function getMyGroupsService(
   };
 
   if (myMembershipsError) {
-    console.error(
-      '[Supabase Query Error] ',
-      myMembershipsError.message,
-      myMembershipsError.details,
+    throw new AppError(
+      'SERVER_ERROR',
+      '그룹 멤버십 조회에 실패했습니다.',
+      myMembershipsError,
     );
-    return { data: [], meta: emptyMeta };
   }
 
   if (!myMemberships || myMemberships.length === 0) {
@@ -72,8 +72,11 @@ export async function getMyGroupsService(
     .order('created_at', { ascending: false });
 
   if (groupsError || !groups) {
-    console.error('[Groups Fetch Error]', groupsError);
-    return { data: [], meta: emptyMeta };
+    throw new AppError(
+      'SERVER_ERROR',
+      '그룹 정보 조회에 실패했습니다.',
+      groupsError,
+    );
   }
 
   // 멤버 수는 admin으로 조회해서 서버에서 카운트
@@ -83,7 +86,11 @@ export async function getMyGroupsService(
     .in('group_id', groupIds);
 
   if (memberRowsError) {
-    console.error('[MemberCount(admin) Fetch Error]', memberRowsError);
+    throw new AppError(
+      'SERVER_ERROR',
+      '멤버 수 조회에 실패했습니다.',
+      memberRowsError,
+    );
   }
 
   const countMap = new Map<string, number>();
@@ -133,18 +140,14 @@ export async function validateGroupUser(
       .eq('group_id', groupId);
 
     if (error) {
-      console.error(
-        `[멤버 검증 에러] User: ${userId}, Group: ${groupId}`,
-        error,
-      );
-      return false; // 에러 나면 일단 차단 (안전)
+      throw new AppError('SERVER_ERROR', '멤버 검증에 실패했습니다.', error);
     }
 
     // 카운트가 1 이상이면 멤버임
     return count !== null && count > 0;
   } catch (error) {
-    console.error('[멤버 검증 예외 발생]', error);
-    return false;
+    if (error instanceof AppError) throw error;
+    throw new AppError('SERVER_ERROR', '멤버 검증 중 서버 에러 발생', error);
   }
 }
 
@@ -162,8 +165,14 @@ export async function getGroupInfo(groupId: string) {
       .single();
 
     if (error) {
-      console.error(`[그룹 정보 조회 실패] ID: ${groupId}`, error.message);
-      return null;
+      if (error.code === 'PGRST116') {
+        throw new AppError('NOT_FOUND', '그룹 정보를 찾을 수 없습니다.', error);
+      }
+      throw new AppError(
+        'SERVER_ERROR',
+        `그룹 정보 조회 실패: ${error.message}`,
+        error,
+      );
     }
 
     const groupInfo: GroupInfo = {
@@ -177,8 +186,12 @@ export async function getGroupInfo(groupId: string) {
 
     return groupInfo;
   } catch (error) {
-    console.error('[그룹 정보 조회]', error);
-    return null;
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      'SERVER_ERROR',
+      '그룹 정보 조회 중 서버 에러 발생',
+      error,
+    );
   }
 }
 
@@ -193,13 +206,18 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
     const uid = me?.user?.id;
 
     if (meErr || !uid) {
-      console.error('[Auth Error]', meErr);
-      return [];
+      throw new AppError(
+        'UNAUTHENTICATED',
+        '인증 정보를 확인할 수 없습니다.',
+        meErr,
+      );
     }
 
     // 멤버 검증 - validateGroupUser
     const isMember = await validateGroupUser(uid, groupId);
-    if (!isMember) return [];
+    if (!isMember) {
+      throw new AppError('FORBIDDEN', '해당 그룹의 멤버가 아닙니다.');
+    }
 
     // 실제 멤버 목록은 admin으로 조회 (RLS: group_members 본인만 SELECT라서 일반 조회 불가)
     const { data: members, error } = await admin
@@ -217,8 +235,11 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
       .order('joined_at', { ascending: true }); // 가입순 정렬
 
     if (error || !members) {
-      console.error('[GroupMembers Fetch Error]', error);
-      return [];
+      throw new AppError(
+        'SERVER_ERROR',
+        '그룹 멤버 조회에 실패했습니다.',
+        error,
+      );
     }
 
     const userIds = members.map((m: any) => m.user_id);
@@ -230,7 +251,11 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
       .in('user_id', userIds);
 
     if (infosErr) {
-      console.error('[github_infos Fetch Error]', infosErr);
+      throw new AppError(
+        'SERVER_ERROR',
+        '유저 정보 조회에 실패했습니다.',
+        infosErr,
+      );
     }
 
     const infoMap = new Map<string, any>(
@@ -256,8 +281,12 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
 
     return response;
   } catch (error) {
-    console.error('[GroupMembers Exception]', error);
-    return [];
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      'SERVER_ERROR',
+      '그룹 멤버 조회 중 서버 에러 발생',
+      error,
+    );
   }
 }
 
@@ -280,8 +309,7 @@ export async function getGroupMembersWithTodayCommitCount(
     .eq('commit_date', today);
 
   if (error) {
-    console.error('[TodayCommit Fetch Error]', error);
-    return members.map((m) => ({ ...m, today_commit_count: 0 }));
+    throw new AppError('SERVER_ERROR', '오늘 커밋 조회에 실패했습니다.', error);
   }
 
   // user_id별 카운트
@@ -307,7 +335,7 @@ export async function getGroupDetail(
 
   // 그룹 정보가 없으면 상세 페이지를 보여줄 수 없음
   if (!groupInfo) {
-    return null;
+    throw new AppError('NOT_FOUND', '그룹 정보를 찾을 수 없습니다.');
   }
 
   // 최종 조합
@@ -332,14 +360,24 @@ export async function getGroupRole(
       .eq('user_id', user_id)
       .maybeSingle();
 
-    if (error || !data) {
-      console.error('[GroupMembers Fetch Error]', error);
-      return null;
+    if (error) {
+      throw new AppError(
+        'SERVER_ERROR',
+        '그룹 역할 조회에 실패했습니다.',
+        error,
+      );
+    }
+    if (!data) {
+      throw new AppError('NOT_FOUND', '그룹 멤버 정보를 찾을 수 없습니다.');
     }
 
     return getGroupRoleKey(data.role) || null;
   } catch (error) {
-    console.error('[GroupMembers Exception]', error);
-    return null;
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      'SERVER_ERROR',
+      '그룹 역할 조회 중 서버 에러 발생',
+      error,
+    );
   }
 }

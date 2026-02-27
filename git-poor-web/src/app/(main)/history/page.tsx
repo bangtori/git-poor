@@ -20,12 +20,12 @@ export default async function HistoryPage() {
   const initialData: Record<string, DailyStat> = {};
 
   if (user && fromDate && toDate) {
-    const result = await getHistoryMapByDateRange(user.id, fromDate, toDate);
-
-    if (!result.success) {
-      console.error(result.error);
-    } else {
-      Object.assign(initialData, result.data);
+    try {
+      const result = await getHistoryMapByDateRange(user.id, fromDate, toDate);
+      Object.assign(initialData, result);
+    } catch (error) {
+      console.error('[History Page Error]', error);
+      throw error;
     }
   }
 
