@@ -170,9 +170,10 @@ export default function AddGroupModal({
             </div>
           </div>
         </div>
-
+        {/* TODO: 추가 그룹 설정 로직 연결 (2차 MVP) */}
+        {/* 추가 그룹 설정 부분 */}
         {/* 하루 시작 시간 (Select) */}
-        <div className="flex flex-col gap-1">
+        {/* <div className="flex flex-col gap-1">
           <label
             htmlFor="day_start_hour"
             className="text-lg font-bold text-text-primary"
@@ -197,10 +198,10 @@ export default function AddGroupModal({
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* 주말 벌칙 적용 여부 (Checkbox) */}
-        <div className="flex items-center gap-2 mt-2">
+        {/* <div className="flex items-center gap-2 mt-2">
           <input
             id="apply_penalty_weekend"
             name="apply_penalty_weekend"
@@ -215,7 +216,7 @@ export default function AddGroupModal({
           >
             주말에도 벌칙 적용하기
           </label>
-        </div>
+        </div> */}
 
         {/* 버튼 영역 */}
         <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border">

@@ -122,7 +122,8 @@ export default function GroupListSection({
                       <Users size={18} />
                       <span>{group.member_count}명</span>
                     </div>
-                    <span>내 벌금 : {group.my_penalty_count}회</span>
+                    {/* TODO: 벌금 카운트 연결 (2차 MVP) */}
+                    {/* <span>내 벌금 : {group.my_penalty_count}회</span> */}
                   </div>
                 </div>
 

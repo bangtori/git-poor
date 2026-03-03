@@ -54,14 +54,15 @@ export default function GroupMemberList({
               </p>
             </div>
 
-            {/* 벌금 횟수 (해골 아이콘) */}
             <div className="w-auto flex gap-4 items-baseline">
-              <div className="flex items-center text-danger gap-1">
+              {/* 벌금 횟수 (해골 아이콘) */}
+              {/* TODO: 벌금 횟수 표시 -> 벌금 카운트 연결 (2차 MVP) */}
+              {/* <div className="flex items-center text-danger gap-1">
                 <Skull className="text-sm md:text-xl" />
                 <span className="text-sm md:text-xl font-bold">
                   {member.current_penalty_count}
                 </span>
-              </div>
+              </div> */}
               <div className="flex items-center text-primary gap-1">
                 {member.today_commit_count === 0 ? (
                   <CalendarX2 className="text-lg text-text-secondary" />
