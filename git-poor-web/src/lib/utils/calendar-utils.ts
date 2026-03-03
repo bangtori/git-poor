@@ -34,10 +34,10 @@ export const getCalendarDate = (
   }));
 };
 
-export function getGrassClass(changes: number): string {
-  if (changes <= 0) return 'text-grass-0';
-  if (changes <= 15) return 'text-grass-1';
-  if (changes <= 60) return 'text-grass-2';
-  if (changes <= 150) return 'text-grass-3';
+export function getGrassClass(commitCount: number): string {
+  if (commitCount <= 0) return 'text-grass-0';
+  if (commitCount === 1) return 'text-grass-1';
+  if (commitCount <= 3) return 'text-grass-2';
+  if (commitCount <= 6) return 'text-grass-3';
   return 'text-grass-4';
 }

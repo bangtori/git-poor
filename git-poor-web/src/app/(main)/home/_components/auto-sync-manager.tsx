@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { shouldRunAutoSync } from '@/lib/utils/sync-check';
 import { useSync } from '@/components/providers/sync-provider';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import { TodayCommitSummary } from '@/types';
 import { handleActionError } from '@/lib/error/handle-action-error';
 
@@ -29,20 +29,12 @@ export default function AutoSyncManager({
       if (isSyncNeeded) {
         isSyncingRef.current = true;
         setIsSyncing(true);
-        console.log(
-          '[AutoSync] 마지막 동기화로부터 시간이 경과하여 동기화를 시작합니다...',
-        );
         try {
           // 동기화 API 호출 (POST)
           const response = await fetch('/api/commits/sync', { method: 'POST' });
           const result: ApiResponse<TodayCommitSummary> = await response.json();
 
           if (result.success) {
-            console.log(
-              '[AutoSync] 동기화 완료! 데이터를 갱신합니다.',
-              result.data,
-            );
-
             // 성공 시 현재 페이지 새로고침
             router.refresh();
           } else {
@@ -54,8 +46,6 @@ export default function AutoSyncManager({
           isSyncingRef.current = false;
           setIsSyncing(false);
         }
-      } else {
-        console.log('[AutoSync] 최신 상태입니다. (동기화 스킵)');
       }
     };
 

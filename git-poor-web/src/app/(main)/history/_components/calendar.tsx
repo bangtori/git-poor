@@ -5,7 +5,7 @@ import { isToday, addMonths, subMonths } from 'date-fns';
 import { getCalendarDate, getGrassClass } from '@/lib/utils/calendar-utils'; // 작성하신 유틸 함수 경로
 import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 
 // 요일 헤더 값
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -126,8 +126,9 @@ export default function HistoryCalendar({
       <div className="grid grid-cols-7 gap-y-2 gap-x-1">
         {calendarDays.map((dayData) => {
           const stat = historyMap[dayData.fullDate];
+          const commitCount = stat?.commit_count || 0;
           const totalChanges = stat?.total_changes || 0;
-          const level = getGrassClass(totalChanges);
+          const level = getGrassClass(commitCount);
 
           return (
             <button

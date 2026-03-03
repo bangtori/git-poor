@@ -10,7 +10,7 @@ import {
   unauthorized,
   fail,
   serverError,
-} from '@/lib/http/reponse-service';
+} from '@/lib/http/response-service';
 import { AppError } from '@/lib/error/app-error';
 
 /**
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       .single();
 
     if (addGroupError) {
-      console.log('그룹 생성 에러' + addGroupError.message);
+      console.error('그룹 생성 에러:', addGroupError.message);
       return fail('SERVER_ERROR', '그룹 생성하는데 문제가 발생했습니다.');
     }
 
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
       .select();
 
     if (addGroupMemberError) {
-      console.log('그룹 멤버 테이블 추가 에러' + addGroupMemberError.message);
+      console.error('그룹 멤버 테이블 추가 에러:', addGroupMemberError.message);
       // 롤백: 방금 만든 그룹 삭제
       await supabase.from('groups').delete().eq('id', groupData.id);
       return fail('SERVER_ERROR', '그룹 생성하는데 문제가 발생했습니다.');

@@ -6,7 +6,7 @@ import {
   unauthorized,
   fail,
   serverError,
-} from '@/lib/http/reponse-service';
+} from '@/lib/http/response-service';
 import { AppError } from '@/lib/error/app-error';
 
 export async function GET() {

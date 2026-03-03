@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { CommitDetail } from '@/types/commit';
 import HistoryCalendar from './_components/calendar';
 import CommitList from './_components/commit_list';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 
 interface DailyStat {
   commit_date: string;
@@ -51,11 +51,6 @@ export default function HistoryClient({ initialData }: HistoryClientProps) {
           commits: response.data,
           isLoading: false,
         });
-
-        console.log(
-          '[지정 날짜 Commit Data API] 불러온 데이터:',
-          response.data,
-        );
       } catch (error) {
         console.error('커밋 히스토리 로딩 실패:', error);
         setSelectedState((prev) => ({ ...prev, isLoading: false }));

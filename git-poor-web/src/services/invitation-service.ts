@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import {
-  InvitationRequst,
+  InvitationRequest,
   Invitation,
   InviteState,
   InvitationWithGroup,
@@ -18,7 +18,7 @@ export async function sendInvitation(email: string, groupId: string) {
 
   // 요청자 권한 체크: groupId에서 admin/owner만 초대 가능
   const { data: me, error: meErr } = await supabase.auth.getUser();
-  console.log('[AUTH]', me?.user?.id, meErr);
+
   const myId = me?.user?.id;
 
   if (!myId) throw new AppError('UNAUTHENTICATED', '로그인이 필요합니다.');
@@ -30,7 +30,6 @@ export async function sendInvitation(email: string, groupId: string) {
     .eq('user_id', myId)
     .maybeSingle();
 
-  console.log('[MEMBER]', { uid: myId, groupId, roleRow, roleErr });
   if (roleErr) throw new AppError('SERVER_ERROR', '멤버 조회 실패', roleErr);
   if (!roleRow || !['owner', 'admin'].includes(roleRow.role)) {
     throw new AppError('FORBIDDEN', '초대 권한이 없습니다.');
@@ -43,14 +42,11 @@ export async function sendInvitation(email: string, groupId: string) {
     .eq('email', normalizedEmail)
     .maybeSingle();
 
-  console.log('[User Info] ', userInfo);
-  console.log('[User Error] ', userError);
   if (userError) {
     throw new AppError('SERVER_ERROR', '유저 조회 실패', userError);
   }
 
   if (!userInfo) {
-    console.log('[User Not Found]', email);
     // 보안/UX를 위해 유저가 없어도 성공으로 처리
     return { success: true };
   }
@@ -58,7 +54,7 @@ export async function sendInvitation(email: string, groupId: string) {
   const inviteeId = userInfo.user_id;
 
   // 초대장 생성
-  const invitation: InvitationRequst = {
+  const invitation: InvitationRequest = {
     group_id: groupId,
     invitee_id: inviteeId,
     state: InviteState.PENDING,

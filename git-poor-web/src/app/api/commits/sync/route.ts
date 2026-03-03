@@ -14,7 +14,7 @@ import {
   badRequest,
   serverError,
   fail,
-} from '@/lib/http/reponse-service';
+} from '@/lib/http/response-service';
 import { AppError } from '@/lib/error/app-error';
 
 // ---------------------------------------------------------
@@ -51,7 +51,6 @@ export async function POST() {
         Date.now() + 5 * 60 * 1000;
 
       if (isExpired && tokenData.refresh_token) {
-        console.log('🔄 토큰 만료 임박: 리프레쉬 시도...');
         const refreshRes = await refreshGitHubToken(tokenData.refresh_token);
 
         if (refreshRes.access_token) {
@@ -70,7 +69,6 @@ export async function POST() {
           );
 
           currentToken = refreshRes.access_token;
-          console.log('✅ 토큰 갱신 완료');
         }
       }
     }
@@ -268,9 +266,7 @@ export async function POST() {
         console.error('Supabase 저장 에러:', upsertError);
         throw new Error('데이터베이스 저장 실패');
       }
-      console.log(`[DB] ${commitsToInsert.length}개 커밋 저장 완료`);
     } else {
-      console.log(`[DB] 신규 커밋 없음 (이미 최신)`);
     }
 
     // ---------------------------------------------------------
@@ -291,12 +287,6 @@ export async function POST() {
         langs: new Set([...acc.langs, ...curr.languages]),
       }),
       { changes: 0, langs: new Set<string>() },
-    );
-
-    console.log(
-      commitsToInsert.length > 0
-        ? '신규 커밋 업데이트 완료'
-        : '최신 상태입니다.',
     );
 
     return ok({

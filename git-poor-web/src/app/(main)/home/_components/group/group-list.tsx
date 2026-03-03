@@ -6,7 +6,7 @@ import AddGroupModal from './add-group-modal';
 import { cn } from '@/lib/utils/tailwind-utils';
 import { useRouter } from 'next/navigation';
 import { GroupSummary, PaginationMeta } from '@/types';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import Link from 'next/link';
 import Pagination from '@/components/ui/pagination';
 import ErrorFallbackCard from '@/components/ui/error-fallback-card';
@@ -79,7 +79,6 @@ export default function GroupListSection({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {
-          console.log('생성 완료! 서버 데이터 다시 불러오는 중...');
           setHasError(false);
           fetchPage(1);
         }}
@@ -123,7 +122,8 @@ export default function GroupListSection({
                       <Users size={18} />
                       <span>{group.member_count}명</span>
                     </div>
-                    <span>내 벌금 : {group.my_penalty_count}회</span>
+                    {/* TODO: 벌금 카운트 연결 (2차 MVP) */}
+                    {/* <span>내 벌금 : {group.my_penalty_count}회</span> */}
                   </div>
                 </div>
 

@@ -8,7 +8,7 @@ import TodayCommitCard from './today-commit-card';
 import { TodayCommitSummary } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { useSync } from '@/components/providers/sync-provider';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import ErrorFallbackCard from '@/components/ui/error-fallback-card';
 import { handleActionError } from '@/lib/error/handle-action-error';
 
@@ -58,8 +58,6 @@ export default function MyProfileSection({
 
           if (error) {
             console.error('❌ 토큰 저장 실패:', error.message);
-          } else {
-            console.log('✅ GitHub 토큰 저장 완료 (tokens 테이블)');
           }
         } catch (err) {
           console.error('토큰 동기화 에러:', err);

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PaginationMeta } from '@/types/page-info';
 import { ErrorCode, ERROR_STATUS_MAP } from '@/types/error';
-import { ApiError, ApiSuccess } from './reponse';
+import { ApiError, ApiSuccess } from './response';
 
 interface OkOptions {
   status?: number;
