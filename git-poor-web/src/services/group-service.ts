@@ -349,35 +349,78 @@ export async function getGroupDetail(
 export async function getGroupRole(
   groupId: string,
   user_id: string,
-): Promise<GroupRole | null> {
+): Promise<GroupRole> {
   const supabase = await createClient();
 
-  try {
-    const { data, error } = await supabase
-      .from('group_members')
-      .select('role')
-      .eq('group_id', groupId)
-      .eq('user_id', user_id)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('group_members')
+    .select('role')
+    .eq('group_id', groupId)
+    .eq('user_id', user_id)
+    .maybeSingle();
 
-    if (error) {
-      throw new AppError(
-        'SERVER_ERROR',
-        '그룹 역할 조회에 실패했습니다.',
-        error,
-      );
-    }
-    if (!data) {
-      throw new AppError('NOT_FOUND', '그룹 멤버 정보를 찾을 수 없습니다.');
-    }
+  if (error) {
+    throw new AppError('SERVER_ERROR', '그룹 역할 조회에 실패했습니다.', error);
+  }
 
-    return getGroupRoleKey(data.role) || null;
-  } catch (error) {
-    if (error instanceof AppError) throw error;
+  if (!data) {
+    throw new AppError('FORBIDDEN', '해당 그룹의 멤버가 아닙니다.');
+  }
+
+  const role = getGroupRoleKey(data.role);
+  if (!role) {
     throw new AppError(
       'SERVER_ERROR',
-      '그룹 역할 조회 중 서버 에러 발생',
-      error,
+      '그룹 역할 파싱에 실패했습니다.',
+      data.role,
     );
   }
+
+  return role;
+}
+
+// 그룹 삭제
+export async function deleteGroup(groupId: string, userId: string) {
+  const admin = createAdminClient();
+
+  const role = await getGroupRole(groupId, userId);
+  if (role !== 'owner') {
+    throw new AppError('FORBIDDEN', '그룹장이 아닙니다.');
+  }
+
+  const { error } = await admin.from('groups').delete().eq('id', groupId);
+  if (error) {
+    throw new AppError('SERVER_ERROR', '그룹 삭제에 실패했습니다.', error);
+  }
+
+  return true;
+}
+
+// 그룹 나가기 (멤버 탈퇴)
+export async function leaveGroup(groupId: string, userId: string) {
+  const supabase = await createClient();
+
+  // 멤버/권한 확인
+  const role = await getGroupRole(groupId, userId); // 멤버 아니면 여기서 FORBIDDEN throw
+
+  // owner는 나가기 금지 (그룹 삭제로 유도)
+  if (role === 'owner') {
+    throw new AppError(
+      'CONFLICT',
+      '그룹장은 그룹을 나갈 수 없습니다. 그룹 삭제를 진행해주세요.',
+    );
+  }
+
+  // 본인 멤버 row 삭제
+  const { error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new AppError('SERVER_ERROR', '그룹 나가기에 실패했습니다.', error);
+  }
+
+  return true;
 }
