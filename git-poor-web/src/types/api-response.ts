@@ -2,11 +2,11 @@ export {
   type ApiResponse,
   type ApiSuccess,
   type ApiError,
-} from '@/lib/http/reponse';
+} from '@/lib/http/response';
 
 import { PaginationMeta } from './page-info';
 import { GroupSummary } from './group';
-import { InvitationWithGroup } from './invatation';
+import { InvitationWithGroup } from './invitation';
 
 export interface GroupApiResponse {
   data: GroupSummary[];

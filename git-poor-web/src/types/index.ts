@@ -6,5 +6,5 @@ export * from './role';
 export * from './api-response';
 export * from './group';
 export * from './page-info';
-export * from './invatation';
+export * from './invitation';
 export * from './error';

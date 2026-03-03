@@ -4,7 +4,7 @@ import { useState } from 'react';
 import FilledButton from '@/components/ui/filled-button';
 import Modal from '@/components/ui/modal';
 import { ModalActionProps } from '@/types/modal';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import { Invitation } from '@/types';
 import { handleActionError } from '@/lib/error/handle-action-error';
 

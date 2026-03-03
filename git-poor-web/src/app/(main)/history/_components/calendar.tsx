@@ -5,7 +5,7 @@ import { isToday, addMonths, subMonths } from 'date-fns';
 import { getCalendarDate, getGrassClass } from '@/lib/utils/calendar-utils'; // 작성하신 유틸 함수 경로
 import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 
 // 요일 헤더 값
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];

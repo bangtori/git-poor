@@ -29,19 +29,18 @@ export default function GroupHeader({
           {isOwner && (
             <button
               onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 mt-2 hover:text-primary hover:scale-105"
-          >
-            <UserRoundPlus />
-            <span className="font-bold">멤버 초대</span>
-          </button>
-        )}
-      </div>
-
+              className="flex items-center gap-2 mt-2 hover:text-primary hover:scale-105"
+            >
+              <UserRoundPlus />
+              <span className="font-bold">멤버 초대</span>
+            </button>
+          )}
+        </div>
       </DefaultCard>
       <NewMemberModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => console.log('멤버 초대 성공')}
+        onSuccess={() => {}}
         groupId={groupId}
       />
     </>

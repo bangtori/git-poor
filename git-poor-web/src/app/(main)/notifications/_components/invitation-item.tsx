@@ -3,7 +3,7 @@
 import DefaultCard from '@/components/ui/default-card';
 import { InvitationWithGroup, InviteState, Invitation } from '@/types';
 import { useState } from 'react';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import { handleActionError } from '@/lib/error/handle-action-error';
 
 interface InvitationItemProps {

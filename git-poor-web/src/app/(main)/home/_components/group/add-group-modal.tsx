@@ -7,7 +7,7 @@ import FilledButton from '@/components/ui/filled-button';
 import { Check, Square } from 'lucide-react';
 import { ModalActionProps } from '@/types/modal';
 import { cn } from '@/lib/utils/tailwind-utils';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import { handleActionError } from '@/lib/error/handle-action-error';
 
 const RECOMMENDED_PENALTIES = [

@@ -1,7 +1,7 @@
 export interface Invitation {
   id: string;
   group_id: string;
-  invitee_id: string
+  invitee_id: string;
   state: InviteState;
 }
 
@@ -12,10 +12,10 @@ export interface InvitationWithGroup extends Invitation {
   };
 }
 
-export interface InvitationRequst {
+export interface InvitationRequest {
   group_id: string;
-  invitee_id: string
-  state: InviteState.PENDING
+  invitee_id: string;
+  state: InviteState.PENDING;
 }
 
 export enum InviteState {

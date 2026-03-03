@@ -1,7 +1,7 @@
 'use client';
 
 import { InvitationWithGroup, PaginationMeta } from '@/types';
-import { ApiResponse } from '@/lib/http/reponse';
+import { ApiResponse } from '@/lib/http/response';
 import InvitationItem from './invitation-item';
 import Pagination from '@/components/ui/pagination';
 import { useState, useCallback } from 'react';

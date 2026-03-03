@@ -33,18 +33,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log('---------------------------------');
-  console.log('🤖 미들웨어 감지');
-  console.log('👉 현재 경로:', request.nextUrl.pathname);
-  console.log('👉 유저 로그인 여부:', !!user);
-
-  if (user) {
-    console.log('✅ 유저 정보 있음:', user.email);
-  } else {
-    console.log('❌ 유저 정보 없음 (세션 없음)');
-  }
-  console.log('---------------------------------');
-
   // 4. 리다이렉트 로직 추가 (여기부터 추가된 내용)
   // ------------------------------------------------
 

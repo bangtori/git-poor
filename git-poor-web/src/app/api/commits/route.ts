@@ -6,7 +6,7 @@ import {
   unauthorized,
   serverError,
   badRequest,
-} from '@/lib/http/reponse-service';
+} from '@/lib/http/response-service';
 import { AppError } from '@/lib/error/app-error';
 
 /**

@@ -5,7 +5,7 @@ import {
   serverError,
   unauthorized,
   badRequest,
-} from '@/lib/http/reponse-service';
+} from '@/lib/http/response-service';
 import { getHistoryMapByDateRange } from '@/services/history-service';
 import { AppError } from '@/lib/error/app-error';
 

@@ -8,7 +8,6 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  console.log('Layout 렌더링');
   const user = await getCachedUser();
   if (!user) {
     redirect('/');
