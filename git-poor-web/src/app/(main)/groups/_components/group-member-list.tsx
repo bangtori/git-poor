@@ -7,9 +7,13 @@ import { cn } from '@/lib/utils/tailwind-utils';
 
 interface GroupMemberListProps {
   members: GroupMemberWithCommit[];
+  groupId: string;
 }
 
-export default function GroupMemberList({ members }: GroupMemberListProps) {
+export default function GroupMemberList({
+  members,
+  groupId,
+}: GroupMemberListProps) {
   return (
     <div className="w-full text-text-primary flex flex-col gap-6 mt-8">
       <h1 className="text-2xl font-bold ">Group Members</h1>
@@ -26,7 +30,9 @@ export default function GroupMemberList({ members }: GroupMemberListProps) {
             key={member.user_id}
             className={cn(
               'w-full max-w-[280px] gap-4 aspect-square flex flex-col items-center justify-between p-6 rounded-3xl bg-background-card border-2 transition-transform hover:scale-105',
-              member.today_commit_count === 0 ? 'border-danger' : 'border-primary',
+              member.today_commit_count === 0
+                ? 'border-danger'
+                : 'border-primary',
             )}
           >
             {/* 유저 정보 */}
@@ -76,7 +82,10 @@ export default function GroupMemberList({ members }: GroupMemberListProps) {
             </div>
 
             {/* TODO: - 상세 내역 링크 추가 */}
-            <Link href={``} className="w-full">
+            <Link
+              href={`/groups/${groupId}/members/${member.user_id}`}
+              className="w-full"
+            >
               <FilledButton className="w-full py-2 text-sm md:text-base hover:bg-primary-hover">
                 커밋 내역
               </FilledButton>

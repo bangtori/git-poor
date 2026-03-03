@@ -36,7 +36,7 @@ export default async function GroupDetailPage({
         isOwner={isOwner}
         groupId={id}
       />
-      <GroupMemberList members={members} />
+      <GroupMemberList members={members} groupId={id} />
     </main>
   );
 }
