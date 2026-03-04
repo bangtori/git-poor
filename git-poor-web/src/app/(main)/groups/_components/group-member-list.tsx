@@ -1,9 +1,12 @@
+'use client';
+
 import { GroupMemberWithCommit } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Skull, CalendarCheck2, CalendarX2 } from 'lucide-react';
 import FilledButton from '@/components/ui/filled-button';
 import { cn } from '@/lib/utils/tailwind-utils';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 interface GroupMemberListProps {
   members: GroupMemberWithCommit[];
@@ -14,6 +17,7 @@ export default function GroupMemberList({
   members,
   groupId,
 }: GroupMemberListProps) {
+  const { previewLink } = usePreviewUtils();
   return (
     <div className="w-full text-text-primary flex flex-col gap-6 mt-8">
       <h1 className="text-2xl font-bold ">Group Members</h1>
@@ -82,9 +86,8 @@ export default function GroupMemberList({
               </div>
             </div>
 
-            {/* TODO: - 상세 내역 링크 추가 */}
             <Link
-              href={`/groups/${groupId}/members/${member.user_id}`}
+              href={previewLink(`/groups/${groupId}/members/${member.user_id}`)}
               className="w-full"
             >
               <FilledButton className="w-full py-2 text-sm md:text-base hover:bg-primary-hover">

@@ -11,6 +11,7 @@ import { useSync } from '@/components/providers/sync-provider';
 import { ApiResponse } from '@/lib/http/response';
 import ErrorFallbackCard from '@/components/ui/error-fallback-card';
 import { handleActionError } from '@/lib/error/handle-action-error';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 interface MyProfileSectionProps {
   user: User;
@@ -25,6 +26,7 @@ export default function MyProfileSection({
     initialCommit,
   );
   const { isSyncing, setIsSyncing } = useSync();
+  const { isPreview, blocked } = usePreviewUtils();
 
   useEffect(() => {
     setCommitSummary(initialCommit);
@@ -32,43 +34,43 @@ export default function MyProfileSection({
 
   useEffect(() => {
     const syncToken = async () => {
+      if (isPreview) return;
+
       const supabase = await createClient();
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (session && session.provider_token) {
-        try {
-          // 💡 스키마의 'tokens' 테이블에 저장
-          const { error } = await supabase.from('tokens').upsert(
-            {
-              user_id: user.id,
-              access_token: session.provider_token,
-              refresh_token: session.provider_refresh_token || null,
+      if (!session?.provider_token) return;
 
-              // 스키마: token_expires_at (timestamp with time zone)
-              token_expires_at: session.expires_at
-                ? new Date(session.expires_at * 1000).toISOString()
-                : null,
+      try {
+        const res = await fetch('/api/tokens/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider_token: session.provider_token,
+            provider_refresh_token: session.provider_refresh_token ?? null,
+            expires_at: session.expires_at ?? null,
+          }),
+        });
 
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'user_id' },
-          ); // user_id가 unique이므로 충돌 시 업데이트
+        const result: ApiResponse<boolean> = await res.json();
 
-          if (error) {
-            console.error('❌ 토큰 저장 실패:', error.message);
-          }
-        } catch (err) {
-          console.error('토큰 동기화 에러:', err);
+        if (!result.success) {
+          // UX는 굳이 alert까지 안 띄워도 됨(백그라운드 동기화)
+          console.error('[Token Sync Failed]', result.error);
+          // 필요하면 handleActionError(result.error);
         }
+      } catch (err) {
+        console.error('[Token Sync Error]', err);
       }
     };
 
     syncToken();
-  }, [user.id]);
+  }, [user.id, isPreview]);
 
   const handleSync = async () => {
+    if (isPreview) return blocked();
     if (isSyncing) return;
 
     setIsSyncing(true);

@@ -6,6 +6,8 @@ import NewMemberModal from './new-member-modal';
 import { useRouter } from 'next/navigation';
 import { handleActionError } from '@/lib/error/handle-action-error';
 import type { ApiResponse } from '@/lib/http/response';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
+
 interface GroupHeaderProps {
   title: string;
   penalty: string;
@@ -21,9 +23,14 @@ export default function GroupHeader({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isActing, setIsActing] = useState(false);
   const router = useRouter();
+  const { isPreview, blocked } = usePreviewUtils();
 
   const action = async () => {
     if (isActing) return;
+    if (isPreview) {
+      blocked();
+      return;
+    }
 
     // Delete 확인 모달
     const confirmMessage = isOwner
@@ -86,7 +93,13 @@ export default function GroupHeader({
         {/* 멤버 초대: owner만 */}
         {isOwner && (
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              if (isPreview) {
+                blocked();
+                return;
+              }
+              setIsModalOpen(true);
+            }}
             disabled={isActing}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-background-card text-text-primary
                        hover:text-primary hover:scale-[1.02] transition disabled:opacity-50 disabled:cursor-not-allowed"

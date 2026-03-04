@@ -5,6 +5,8 @@ import type { CommitDetail } from '@/types/commit';
 import HistoryCalendar from './_components/calendar';
 import CommitList from './_components/commit_list';
 import { ApiResponse } from '@/lib/http/response';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
+import { mockCommitDetails } from '@/lib/preview/mock-history';
 
 interface DailyStat {
   commit_date: string;
@@ -28,8 +30,18 @@ export default function HistoryClient({ initialData }: HistoryClientProps) {
     commits: [],
     isLoading: false,
   });
+  const { isPreview } = usePreviewUtils();
 
   function handleSelectDate(date: string) {
+    if (isPreview) {
+      const filtered = mockCommitDetails.filter((c) => c.commit_date === date);
+      setSelectedState({
+        date,
+        commits: filtered.length > 0 ? filtered : mockCommitDetails,
+        isLoading: false,
+      });
+      return;
+    }
     const fetchDateCommits = async () => {
       setSelectedState((prev) => ({
         ...prev,

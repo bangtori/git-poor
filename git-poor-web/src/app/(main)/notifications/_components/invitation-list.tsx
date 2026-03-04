@@ -6,7 +6,7 @@ import InvitationItem from './invitation-item';
 import Pagination from '@/components/ui/pagination';
 import { useState, useCallback } from 'react';
 import { handleActionError } from '@/lib/error/handle-action-error';
-
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 interface InvitationListProps {
   initialInvitations: InvitationWithGroup[];
   initialMeta: PaginationMeta;
@@ -21,8 +21,11 @@ export default function InvitationList({
   const [meta, setMeta] = useState<PaginationMeta>(initialMeta);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { isPreview } = usePreviewUtils();
+
   const fetchPage = useCallback(
     async (page: number) => {
+      if (isPreview) return;
       setIsLoading(true);
       try {
         const res = await fetch(
@@ -43,7 +46,7 @@ export default function InvitationList({
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
-    [meta.limit],
+    [meta.limit, isPreview],
   );
 
   const handleRefresh = () => {

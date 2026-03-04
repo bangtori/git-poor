@@ -7,6 +7,7 @@ import { ModalActionProps } from '@/types/modal';
 import { ApiResponse } from '@/lib/http/response';
 import { Invitation } from '@/types';
 import { handleActionError } from '@/lib/error/handle-action-error';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 interface NewMemberModalProps extends ModalActionProps {
   groupId: string;
@@ -21,6 +22,7 @@ export default function NewMemberModal({
   const [isLoading, setIsLoading] = useState(false);
   const [searchedEmail, setSearchedEmail] = useState('');
   const [isValidEmail, setIsValidEmail] = useState(true);
+  const { isPreview, blocked } = usePreviewUtils();
 
   // 이메일 유효성 검사 함수
   const validateEmail = (email: string) => {
@@ -41,6 +43,10 @@ export default function NewMemberModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPreview) {
+      blocked();
+      return;
+    }
     if (!isValidEmail || !searchedEmail) return;
 
     setIsLoading(true);
