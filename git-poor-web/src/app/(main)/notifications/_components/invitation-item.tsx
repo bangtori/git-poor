@@ -5,6 +5,7 @@ import { InvitationWithGroup, InviteState, Invitation } from '@/types';
 import { useState } from 'react';
 import { ApiResponse } from '@/lib/http/response';
 import { handleActionError } from '@/lib/error/handle-action-error';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 interface InvitationItemProps {
   invitation: InvitationWithGroup;
@@ -16,8 +17,10 @@ export default function InvitationItem({
   onResponded,
 }: InvitationItemProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const { isPreview, blocked } = usePreviewUtils();
 
   const handleResponse = async (state: InviteState) => {
+    if (isPreview) return blocked();
     if (isLoading) return;
     setIsLoading(true);
     try {

@@ -4,13 +4,13 @@ import { Users, SquarePlus } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import AddGroupModal from './add-group-modal';
 import { cn } from '@/lib/utils/tailwind-utils';
-import { useRouter } from 'next/navigation';
 import { GroupSummary, PaginationMeta } from '@/types';
 import { ApiResponse } from '@/lib/http/response';
 import Link from 'next/link';
 import Pagination from '@/components/ui/pagination';
 import ErrorFallbackCard from '@/components/ui/error-fallback-card';
 import { handleActionError } from '@/lib/error/handle-action-error';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 interface GroupListSectionProps {
   initialGroups: GroupSummary[] | null;
@@ -34,10 +34,13 @@ export default function GroupListSection({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(!initialGroups);
-  const router = useRouter();
+
+  const { isPreview, blocked, previewLink } = usePreviewUtils();
 
   const fetchPage = useCallback(
     async (page: number) => {
+      if (isPreview) return blocked();
+
       setIsLoading(true);
       try {
         const res = await fetch(`/api/groups?page=${page}&limit=${meta.limit}`);
@@ -68,7 +71,10 @@ export default function GroupListSection({
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold mb-4">Group</h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            if (isPreview) return blocked();
+            setIsModalOpen(true);
+          }}
           className="flex gap-2 items-center text-primary hover:text-primary-hover  transition-transform hover:scale-105"
         >
           <SquarePlus size={20} />
@@ -127,7 +133,10 @@ export default function GroupListSection({
                   </div>
                 </div>
 
-                <Link href={`groups/${group.id}`} className="w-full md:w-auto">
+                <Link
+                  href={previewLink(`/groups/${group.id}`)}
+                  className="w-full md:w-auto"
+                >
                   <FilledButton className="w-full py-2 hover:bg-primary-hover">
                     바로가기
                   </FilledButton>

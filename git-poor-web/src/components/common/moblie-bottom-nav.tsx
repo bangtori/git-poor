@@ -5,10 +5,13 @@ import { useSearchParams, usePathname } from 'next/navigation';
 import { Home, Users, History } from 'lucide-react';
 import { cn } from '@/lib/utils/tailwind-utils';
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ basePath = '' }: { basePath?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentView = searchParams.get('view'); // 'group'인지 확인용
+
+  const homePath = `${basePath}/home`;
+  const historyPath = `${basePath}/history`;
 
   const tabs = [
     {

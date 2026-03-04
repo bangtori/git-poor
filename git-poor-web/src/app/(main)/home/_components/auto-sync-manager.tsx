@@ -7,6 +7,7 @@ import { useSync } from '@/components/providers/sync-provider';
 import { ApiResponse } from '@/lib/http/response';
 import { TodayCommitSummary } from '@/types';
 import { handleActionError } from '@/lib/error/handle-action-error';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 interface AutoSyncManagerProps {
   lastSyncDate: string | null; // DB에서 가져온 마지막 동기화 시간 (ISO String)
@@ -15,11 +16,13 @@ interface AutoSyncManagerProps {
 export default function AutoSyncManager({
   lastSyncDate,
 }: AutoSyncManagerProps) {
+  const { isPreview } = usePreviewUtils();
   const router = useRouter();
   const isSyncingRef = useRef(false);
   const { setIsSyncing } = useSync();
 
   useEffect(() => {
+    if (isPreview) return;
     const checkAndSync = async () => {
       if (isSyncingRef.current) return;
 
