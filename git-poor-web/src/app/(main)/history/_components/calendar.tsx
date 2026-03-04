@@ -6,6 +6,7 @@ import { getCalendarDate, getGrassClass } from '@/lib/utils/calendar-utils'; // 
 import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
 import { ApiResponse } from '@/lib/http/response';
+import { usePreviewUtils } from '@/lib/preview/preview-utils';
 
 // 요일 헤더 값
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -26,6 +27,7 @@ export default function HistoryCalendar({
   onDateSelect,
   initialData = {},
 }: HistoryCalendarProps) {
+  const { isPreview } = usePreviewUtils();
   // 현재 보고 있는 달력의 기준 날짜 (기본값: 오늘)
   const [currentDate, setCurrentDate] = useState(new Date());
   // 커밋 데이터 (날짜를 키로 하는 객체 형태)
@@ -55,6 +57,8 @@ export default function HistoryCalendar({
       isFirstRender.current = false;
       if (Object.keys(initialData).length > 0) return;
     }
+
+    if (isPreview) return;
 
     const fetchCommitHistory = async () => {
       // 캘린더 그리드의 가장 첫 날짜와 마지막 날짜를 구함 (YYYY-MM-DD)
