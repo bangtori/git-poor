@@ -10,7 +10,7 @@
 > 2026.01.13 ~ (진행중) \
 > 개인 프로젝트 \
 > 2026년 3월 4일 기준 1차 MVP 완성 \
-> Link: https://gitpoor.vercel.app/
+> Link: https://git-poor.vercel.app/
 
 ### 문제 정의
 
@@ -175,7 +175,7 @@ git-poor-web/
 
 실제 계정 연결 없이도 서비스 흐름을 확인할 수 있도록 **Preview 모드 (Read-only)** 를 제공합니다.
 
-🔗 Preview: https://gitpoor.vercel.app/preview/home
+🔗 Preview: https://git-poor.vercel.app/preview/home
 
 Preview 모드에서는 다음 기능을 체험할 수 있습니다.
 
