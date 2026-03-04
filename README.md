@@ -9,7 +9,7 @@
 
 > 2026.01.13 ~ (진행중) \
 > 개인 프로젝트 \
-> 2026년 3월 N일 기준 1차 MVP 완성 \
+> 2026년 3월 4일 기준 1차 MVP 완성 \
 > Link: https://gitpoor.vercel.app/
 
 ### 문제 정의
@@ -173,8 +173,17 @@ git-poor-web/
 
 본 서비스는 GitHub OAuth 기반 인증을 통해 실제 커밋 데이터를 연동하여 동작합니다.
 
-실제 계정 연결 없이도 기능 흐름을 확인할 수 있도록 **Preview 모드**를 제공합니다.
-Preview 모드에서는 읽기 전용 데이터로 홈, 히스토리, 그룹 기능을 체험할 수 있습니다.
+실제 계정 연결 없이도 서비스 흐름을 확인할 수 있도록 **Preview 모드 (Read-only)** 를 제공합니다.
 
-- Preview 모드 제공 예정
-- 시연 영상 링크 추가 예정
+🔗 Preview: https://gitpoor.vercel.app/preview/home
+
+Preview 모드에서는 다음 기능을 체험할 수 있습니다.
+
+- Home (프로필 / 오늘 커밋 상태)
+- History (커밋 히스토리 잔디)
+- Group (그룹 목록 / 멤버 현황)
+- Member Detail (멤버 커밋 내역)
+
+> Preview 환경에서는 데이터 변경 기능(그룹 생성, 초대, 삭제 등)이 비활성화됩니다.
+
+📹 Demo Video: (추후 추가 예정)
