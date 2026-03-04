@@ -1,3 +1,5 @@
+'use client';
+
 import { CommitDetail } from '@/types';
 import Link from 'next/link';
 import { format } from 'date-fns';

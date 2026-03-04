@@ -10,11 +10,11 @@ import { SyncProvider } from '@/components/providers/sync-provider';
 import AutoSyncManager from '@/app/(main)/home/_components/auto-sync-manager';
 import MyProfileSection from '@/app/(main)/home/_components/profile/my-profile-section';
 interface HomePageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function PreviewHomePage({ searchParams }: HomePageProps) {
-  const params = searchParams;
+export default async function PreviewHomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
   const view = params.view;
   const isGroupView = view === 'group';
 

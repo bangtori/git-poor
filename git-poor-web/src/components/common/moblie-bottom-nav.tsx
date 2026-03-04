@@ -16,21 +16,21 @@ export function MobileBottomNav({ basePath = '' }: { basePath?: string }) {
   const tabs = [
     {
       label: 'home',
-      href: '/home', // 기본 홈 (내 정보)
+      href: homePath, // 기본 홈 (내 정보)
       icon: Home,
-      isActive: pathname === '/home' && !currentView, // view 파라미터가 없을 때 활성
+      isActive: pathname === homePath && !currentView, // view 파라미터가 없을 때 활성
     },
     {
       label: 'group',
-      href: '/home?view=group', // home 내 view 파라미터 활용
+      href: `${homePath}?view=group`, // home 내 view 파라미터 활용
       icon: Users,
-      isActive: pathname === '/home' && currentView === 'group',
+      isActive: pathname === homePath && currentView === 'group',
     },
     {
       label: 'history',
-      href: '/history', // 아예 다른 라우터
+      href: historyPath, // 아예 다른 라우터
       icon: History,
-      isActive: pathname === '/history',
+      isActive: pathname === historyPath,
     },
   ];
 

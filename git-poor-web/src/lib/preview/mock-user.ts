@@ -23,7 +23,8 @@ export const mockUser: User = {
   email: 'gitpoor-dev@example.com',
   app_metadata: {},
   user_metadata: {
-    avatar_url: 'https://avatars.githubusercontent.com/u/12345678?v=4',
+    avatar_url:
+      'https://ui-avatars.com/api/?name=김개발&background=0D8ABC&color=fff&size=128',
     full_name: '김개발',
     user_name: 'gitpoor-dev',
   },

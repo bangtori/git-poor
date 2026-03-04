@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com', // ✅ 목업용 이니셜 아바타
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

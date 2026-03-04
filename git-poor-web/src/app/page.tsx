@@ -1,6 +1,7 @@
 'use client';
 import { createClient } from '@/lib/supabase/client';
 import GithubLoginButton from './auth/_components/GithubLoginButton';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -22,6 +23,12 @@ export default function LoginPage() {
         </h1>
         <p className="text-gray-400">코딩 안 하면 벌금 낸다.</p>
         <GithubLoginButton handleGitHubLogin={handleGitHubLogin} />
+        <Link
+          href="/preview/home"
+          className="text-text-secondary underline text-sm hover:text-text-primary transition-colors"
+        >
+          로그인 없이 둘러보기
+        </Link>
       </div>
     </div>
   );

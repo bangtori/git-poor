@@ -69,7 +69,8 @@ export const mockGroupMembersOwner: GroupMemberWithCommit[] = [
     github_id: 'gitpoor-dev',
     email: 'gitpoor-dev@example.com',
     nickname: '김개발',
-    profile_image: 'https://avatars.githubusercontent.com/u/12345678?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=김개발&background=0D8ABC&color=fff&size=128',
     role: 'owner',
     total_penalty_count: 5,
     current_penalty_count: 2,
@@ -81,7 +82,8 @@ export const mockGroupMembersOwner: GroupMemberWithCommit[] = [
     github_id: 'code-master-j',
     email: 'codej@example.com',
     nickname: '이정훈',
-    profile_image: 'https://avatars.githubusercontent.com/u/23456789?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=이정훈&background=2ECC71&color=fff&size=128',
     role: 'member',
     total_penalty_count: 3,
     current_penalty_count: 1,
@@ -93,7 +95,8 @@ export const mockGroupMembersOwner: GroupMemberWithCommit[] = [
     github_id: 'suzy-fullstack',
     email: 'suzy@example.com',
     nickname: '박수지',
-    profile_image: 'https://avatars.githubusercontent.com/u/34567890?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=박수지&background=E74C3C&color=fff&size=128',
     role: 'member',
     total_penalty_count: 8,
     current_penalty_count: 4,
@@ -105,7 +108,8 @@ export const mockGroupMembersOwner: GroupMemberWithCommit[] = [
     github_id: 'backend-hoon',
     email: 'hoon@example.com',
     nickname: '최지훈',
-    profile_image: 'https://avatars.githubusercontent.com/u/45678901?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=최지훈&background=9B59B6&color=fff&size=128',
     role: 'member',
     total_penalty_count: 1,
     current_penalty_count: 0,
@@ -131,7 +135,8 @@ export const mockGroupMembersMember: GroupMemberWithCommit[] = [
     github_id: 'team-lead-kim',
     email: 'tlkim@example.com',
     nickname: '김팀장',
-    profile_image: 'https://avatars.githubusercontent.com/u/56789012?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=김팀장&background=F39C12&color=fff&size=128',
     role: 'owner',
     total_penalty_count: 0,
     current_penalty_count: 0,
@@ -143,7 +148,8 @@ export const mockGroupMembersMember: GroupMemberWithCommit[] = [
     github_id: 'gitpoor-dev',
     email: 'gitpoor-dev@example.com',
     nickname: '김개발',
-    profile_image: 'https://avatars.githubusercontent.com/u/12345678?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=김개발&background=0D8ABC&color=fff&size=128',
     role: 'member',
     total_penalty_count: 2,
     current_penalty_count: 0,
@@ -155,7 +161,8 @@ export const mockGroupMembersMember: GroupMemberWithCommit[] = [
     github_id: 'design-yuna',
     email: 'yuna@example.com',
     nickname: '한유나',
-    profile_image: 'https://avatars.githubusercontent.com/u/67890123?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=한유나&background=1ABC9C&color=fff&size=128',
     role: 'member',
     total_penalty_count: 4,
     current_penalty_count: 2,
@@ -167,7 +174,8 @@ export const mockGroupMembersMember: GroupMemberWithCommit[] = [
     github_id: 'devops-min',
     email: 'min@example.com',
     nickname: '정민수',
-    profile_image: 'https://avatars.githubusercontent.com/u/78901234?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=정민수&background=E67E22&color=fff&size=128',
     role: 'member',
     total_penalty_count: 6,
     current_penalty_count: 3,
@@ -179,7 +187,8 @@ export const mockGroupMembersMember: GroupMemberWithCommit[] = [
     github_id: 'infra-park',
     email: 'park@example.com',
     nickname: '박서준',
-    profile_image: 'https://avatars.githubusercontent.com/u/89012345?v=4',
+    profile_image:
+      'https://ui-avatars.com/api/?name=박서준&background=3498DB&color=fff&size=128',
     role: 'member',
     total_penalty_count: 2,
     current_penalty_count: 1,
